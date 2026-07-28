@@ -1,14 +1,21 @@
-# NextTodo Mobile (React Native)
+# FlowTodo (React Native)
 
-> Klon aplikacji NextTodo w React Native (Expo) — jedna baza kodu na iOS, Androida i web.
+> Port NextTodo na React Native (Expo) + Supabase — jedna baza kodu na iOS, Androida i web.
+> Osobna aplikacja: **FlowTodo** (brand Ocean Flow), inspirowana projektem NextTodo.
 
-Ten projekt to **port React Native** oryginalnej aplikacji webowej NextTodo:
+Oryginał webowy:
 👉 https://github.com/matt400/NextTodo
 
 ## Cel
 
 Umożliwić korzystanie z aplikacji zarówno na komputerze, jak i na telefonie,
 z jednej wspólnej bazy kodu (React Native + `react-native-web` przez Expo).
+
+## Brand
+
+- Nazwa: **FlowTodo**
+- Paleta: Ocean Flow (`#0d9488` teal) — tokeny w `constants/theme.ts`
+- Layout auth jak w NextTodo; identyfikacja wizualna osobna
 
 ## Zmiany względem oryginału
 
