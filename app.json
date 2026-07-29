@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "NextTodo",
-    "slug": "nexttodo-mobile",
+    "name": "FlowTodo",
+    "slug": "flowtodo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nexttodo",
+    "scheme": "flowtodo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
