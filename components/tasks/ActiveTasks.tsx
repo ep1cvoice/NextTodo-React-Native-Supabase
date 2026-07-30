@@ -1,16 +1,15 @@
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
 import CreateTaskButton from '@/components/tasks/CreateTaskButton';
+import AddTaskModal from '@/components/tasks/AddTaskModal';
 import { colors } from '@/constants/theme';
 
 export default function ActiveTasks() {
-  const { activeTasks, toggleTask, deleteTask } = useTasks();
-
-  const handleCreate = () => {
-    Alert.alert('Nie można dodawać zadań w tej wersji.');
-  };
+  const { activeTasks, categories, tags, addTask, toggleTask, deleteTask } = useTasks();
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -45,8 +44,16 @@ export default function ActiveTasks() {
       />
 
       <View style={styles.activeFooter}>
-        <CreateTaskButton onPress={handleCreate} />
+        <CreateTaskButton onPress={() => setShowCreateModal(true)} />
       </View>
+
+      <AddTaskModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onAdd={addTask}
+        categories={categories}
+        tags={tags}
+      />
     </View>
   );
 }

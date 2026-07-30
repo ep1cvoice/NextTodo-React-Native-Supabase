@@ -35,6 +35,8 @@ export interface Tag {
   color: string;
 }
 
+export const MAX_TAGS_PER_TASK = 10;
+
 export type CategoryIcon =
   | 'Briefcase'
   | 'Home'

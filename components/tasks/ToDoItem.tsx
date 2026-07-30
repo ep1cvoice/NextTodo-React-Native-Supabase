@@ -4,7 +4,6 @@ import {
   Text,
   Pressable,
   Modal,
-  Alert,
   StyleSheet,
   useWindowDimensions,
   LayoutAnimation,
@@ -42,6 +41,8 @@ import {
 import type { LucideIcon } from 'lucide-react-native';
 import type { CategoryIcon, Task } from '@/types';
 import { colors, tokens } from '@/constants/theme';
+import { useTasks } from '@/context/TasksContext';
+import EditTaskModal from '@/components/tasks/EditTaskModal';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -89,9 +90,11 @@ interface ToDoItemProps {
 export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoItemProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < tokens.desktopBreakpoint;
+  const { categories, tags: allTags, updateTask } = useTasks();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const category = task.category;
   const tags = task.tags ?? [];
@@ -129,7 +132,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
   };
 
   const handleEdit = () => {
-    Alert.alert('Nie można edytować zadań w tej wersji.');
+    setShowEditModal(true);
   };
 
   return (
@@ -296,6 +299,15 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
           </Pressable>
         </Pressable>
       </Modal>
+
+      <EditTaskModal
+        visible={showEditModal}
+        task={task}
+        categories={categories}
+        tags={allTags}
+        onClose={() => setShowEditModal(false)}
+        onUpdate={updateTask}
+      />
     </>
   );
 }
