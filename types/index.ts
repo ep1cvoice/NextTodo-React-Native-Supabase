@@ -21,3 +21,51 @@ export interface AuthContextValue {
   setUser: Dispatch<SetStateAction<User | null>>;
   logout: () => Promise<void>;
 }
+
+export interface Category {
+  id: number;
+  name: string;
+  color: string;
+  icon: string;
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  color: string;
+}
+
+export type CategoryIcon =
+  | 'Briefcase'
+  | 'Home'
+  | 'Book'
+  | 'Heart'
+  | 'Star'
+  | 'ShoppingCart'
+  | 'Dumbbell'
+  | 'Code'
+  | 'Music'
+  | 'Camera'
+  | 'Plane'
+  | 'Car'
+  | 'Coffee'
+  | 'Gamepad2'
+  | 'Palette'
+  | 'Globe'
+  | 'Leaf'
+  | 'Zap'
+  | 'Target'
+  | 'Users';
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  done: boolean;
+  scheduled: string | null;
+  created: string;
+  categoryId: number | null;
+  category: Category | null;
+  sortOrder: number;
+  tags?: Tag[];
+}

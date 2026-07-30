@@ -32,6 +32,8 @@ export const colors = {
   sidebarLogoutText: '#ef4444',
 
   overlayBg: 'rgba(0, 0, 0, 0.35)',
+  todoHighlight: 'rgba(13, 148, 136, 0.06)',
+  sidebarLogoutHover: 'rgba(239, 68, 68, 0.08)',
 } as const;
 
 export const tokens = {
