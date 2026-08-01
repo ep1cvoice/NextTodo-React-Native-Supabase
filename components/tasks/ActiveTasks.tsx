@@ -6,23 +6,97 @@ import { useTheme } from '@/context/ThemeContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
 import CreateTaskButton from '@/components/tasks/CreateTaskButton';
 import AddTaskModal from '@/components/tasks/AddTaskModal';
+import TaskFilterBar from '@/components/tasks/TaskFilterBar';
+import TaskFilterSheet from '@/components/tasks/TaskFilterSheet';
 import type { AppColors } from '@/constants/theme';
+
+function toggleId(prev: number[], id: number): number[] {
+  return prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+}
 
 export default function ActiveTasks() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { activeTasks, categories, tags, addTask, toggleTask, deleteTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+
+  const validCategoryIds = useMemo(
+    () => selectedCategoryIds.filter((id) => categories.some((c) => c.id === id)),
+    [selectedCategoryIds, categories]
+  );
+  const validTagIds = useMemo(
+    () => selectedTagIds.filter((id) => tags.some((t) => t.id === id)),
+    [selectedTagIds, tags]
+  );
+  const hasFilters = validCategoryIds.length > 0 || validTagIds.length > 0;
+
+  const filteredTasks = useMemo(() => {
+    return activeTasks.filter((task) => {
+      if (validCategoryIds.length > 0) {
+        if (task.categoryId === null || !validCategoryIds.includes(task.categoryId)) {
+          return false;
+        }
+      }
+      if (validTagIds.length > 0) {
+        const taskTagIds = new Set((task.tags ?? []).map((t) => t.id));
+        // OR within tags: match if task has any selected tag
+        if (!validTagIds.some((id) => taskTagIds.has(id))) return false;
+      }
+      return true;
+    });
+  }, [activeTasks, validCategoryIds, validTagIds]);
+
+  const clearFilters = () => {
+    setSelectedCategoryIds([]);
+    setSelectedTagIds([]);
+  };
+
+  const emptyCopy = (() => {
+    if (!hasFilters) {
+      return {
+        title: 'No active tasks',
+        text: 'Create your first task to get started',
+      };
+    }
+    if (validTagIds.length > 0 && validCategoryIds.length > 0) {
+      return {
+        title: 'No matching tasks',
+        text: 'Try clearing some filters or create a task with these labels',
+      };
+    }
+    if (validTagIds.length > 0) {
+      return {
+        title: 'No tasks with these tags',
+        text: 'Try removing some tag filters or assign these tags to a task',
+      };
+    }
+    return {
+      title: 'No tasks in these categories',
+      text: 'Add a category to an existing task or create a new one',
+    };
+  })();
 
   return (
     <View style={styles.container}>
+      <TaskFilterBar
+        categories={categories}
+        tags={tags}
+        selectedCategoryIds={validCategoryIds}
+        selectedTagIds={validTagIds}
+        onOpen={() => setShowFilterSheet(true)}
+        onClear={clearFilters}
+      />
+
       <FlatList
         style={styles.tasksList}
         contentContainerStyle={[
           styles.tasksContent,
-          activeTasks.length === 0 && styles.tasksContentEmpty,
+          filteredTasks.length === 0 && styles.tasksContentEmpty,
         ]}
-        data={activeTasks}
+        data={filteredTasks}
         keyExtractor={(item) => String(item.id)}
         ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
         ListEmptyComponent={
@@ -31,8 +105,8 @@ export default function ActiveTasks() {
               <View style={styles.emptyIconWrap}>
                 <Search size={68} color={colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>No active tasks</Text>
-              <Text style={styles.emptyText}>Create your first task to get started</Text>
+              <Text style={styles.emptyTitle}>{emptyCopy.title}</Text>
+              <Text style={styles.emptyText}>{emptyCopy.text}</Text>
             </View>
           </View>
         }
@@ -56,6 +130,20 @@ export default function ActiveTasks() {
         onAdd={addTask}
         categories={categories}
         tags={tags}
+      />
+
+      <TaskFilterSheet
+        visible={showFilterSheet}
+        categories={categories}
+        tags={tags}
+        selectedCategoryIds={validCategoryIds}
+        selectedTagIds={validTagIds}
+        onClearCategories={() => setSelectedCategoryIds([])}
+        onToggleCategory={(id) => setSelectedCategoryIds((prev) => toggleId(prev, id))}
+        onClearTags={() => setSelectedTagIds([])}
+        onToggleTag={(id) => setSelectedTagIds((prev) => toggleId(prev, id))}
+        onClear={clearFilters}
+        onClose={() => setShowFilterSheet(false)}
       />
     </View>
   );

@@ -22,6 +22,19 @@ export interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  done: boolean;
+  scheduled: string | null;
+  created: string;
+  categoryId: number | null;
+  category: Category | null;
+  sortOrder: number;
+  tags?: Tag[];
+}
+
 export interface Category {
   id: number;
   name: string;
@@ -59,15 +72,3 @@ export type CategoryIcon =
   | 'Target'
   | 'Users';
 
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  done: boolean;
-  scheduled: string | null;
-  created: string;
-  categoryId: number | null;
-  category: Category | null;
-  sortOrder: number;
-  tags?: Tag[];
-}
