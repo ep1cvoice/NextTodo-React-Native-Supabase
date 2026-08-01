@@ -117,6 +117,7 @@ export default function SettingsScreen() {
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
+      <View style={styles.panel}>
       <Text style={styles.pageTitle}>Settings</Text>
       <Text style={styles.signedIn}>
         Signed in as {user?.email ?? '—'} <Text style={styles.mockTag}>(mock)</Text>
@@ -344,6 +345,7 @@ export default function SettingsScreen() {
         <LogOut size={18} color={colors.sidebarLogoutText} strokeWidth={2} />
         <Text style={styles.logoutText}>Log Out</Text>
       </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -356,8 +358,13 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     },
     content: {
       padding: 16,
-      gap: 10,
       paddingBottom: 32,
+      alignItems: 'center',
+    },
+    panel: {
+      width: '100%',
+      maxWidth: 520,
+      gap: 10,
     },
     pageTitle: {
       fontSize: 18,

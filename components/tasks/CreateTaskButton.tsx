@@ -48,7 +48,7 @@ function createStyles(colors: AppColors) {
       width: '100%',
     },
     buttonDesktop: {
-      width: '33%',
+      width: '100%',
       maxWidth: 320,
       alignSelf: 'flex-end',
     },

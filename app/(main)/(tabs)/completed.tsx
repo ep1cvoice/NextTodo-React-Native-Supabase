@@ -3,6 +3,7 @@ import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
+import { tokens } from '@/constants/theme';
 
 export default function CompletedTasksScreen() {
   const { completedTasks, toggleTask, deleteTask } = useTasks();
@@ -10,36 +11,38 @@ export default function CompletedTasksScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bgContent }]}>
-      <FlatList
-        data={completedTasks}
-        keyExtractor={(item) => String(item.id)}
-        ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
-        contentContainerStyle={[
-          styles.listContent,
-          completedTasks.length === 0 && styles.listEmpty,
-        ]}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
-              <Search size={48} color={colors.primary} />
+      <View style={styles.panel}>
+        <FlatList
+          data={completedTasks}
+          keyExtractor={(item) => String(item.id)}
+          ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+          contentContainerStyle={[
+            styles.listContent,
+            completedTasks.length === 0 && styles.listEmpty,
+          ]}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
+                <Search size={48} color={colors.primary} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                No completed tasks
+              </Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+                Mark a task as done to see it here
+              </Text>
             </View>
-            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-              No completed tasks
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              Mark a task as done to see it here
-            </Text>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <ToDoItem
-            task={item}
-            index={index}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-          />
-        )}
-      />
+          }
+          renderItem={({ item, index }) => (
+            <ToDoItem
+              task={item}
+              index={index}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+            />
+          )}
+        />
+      </View>
     </View>
   );
 }
@@ -47,7 +50,14 @@ export default function CompletedTasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    alignItems: 'center',
+  },
+  panel: {
+    flex: 1,
+    width: '100%',
+    maxWidth: tokens.contentMaxWidth,
     padding: 16,
+    minHeight: 0,
   },
   listContent: {
     paddingBottom: 16,
