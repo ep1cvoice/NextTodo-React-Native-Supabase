@@ -111,7 +111,7 @@ function createStyles(colors: AppColors) {
     },
     activeFooter: {
       width: '100%',
-      alignItems: 'center',
+      alignItems: 'stretch',
       paddingTop: 10,
     },
   });

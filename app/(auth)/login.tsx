@@ -3,12 +3,13 @@ import { Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Mail, Lock } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import Heading from '@/components/ui/Heading';
 import Field from '@/components/ui/Field';
 import Button from '@/components/ui/Button';
 import Linking from '@/components/ui/Linking';
 import AuthLayout, { LoggingInOverlay } from '@/components/ui/AuthLayout';
-import { colors } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
 
 export default function LoginScreen() {
   const [values, setValues] = useState({ email: '', password: '' });
@@ -19,6 +20,8 @@ export default function LoginScreen() {
   const [isError, setIsError] = useState(false);
 
   const { setUser } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const params = useLocalSearchParams<{ registered?: string }>();
 
@@ -107,17 +110,19 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  successInfo: {
-    color: colors.green,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  errorInfo: {
-    color: colors.red,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    successInfo: {
+      color: colors.green,
+      textAlign: 'center',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    errorInfo: {
+      color: colors.red,
+      textAlign: 'center',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
 } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { colors, tokens } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type InputType = 'text' | 'email' | 'password';
 
@@ -35,6 +37,8 @@ export default function Field({
   error,
   autoCapitalize = 'none',
 }: FieldProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [showPassword, setShowPassword] = useState(false);
   const [focused, setFocused] = useState(false);
 
@@ -100,64 +104,66 @@ export default function Field({
   );
 }
 
-const styles = StyleSheet.create({
-  field: {
-    flexDirection: 'column',
-    gap: 6,
-    width: '100%',
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 14.4,
-    fontWeight: '500',
-  },
-  inputWrapper: {
-    position: 'relative',
-    width: '100%',
-    justifyContent: 'center',
-  },
-  input: {
-    width: '100%',
-    height: tokens.inputHeight,
-    paddingHorizontal: 16,
-    borderRadius: tokens.borderRadius,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    backgroundColor: colors.bgSurface,
-    color: colors.textPrimary,
-    fontSize: 15.2,
-  },
-  inputWithIcon: {
-    paddingLeft: 46,
-  },
-  inputWithEye: {
-    paddingRight: 46,
-  },
-  inputFocused: {
-    borderColor: colors.primary,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  inputError: {
-    borderColor: colors.red,
-    backgroundColor: 'rgba(231, 0, 11, 0.06)',
-  },
-  icon: {
-    position: 'absolute',
-    left: 14,
-    zIndex: 1,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 15,
-    zIndex: 1,
-  },
-  error: {
-    fontSize: 12.8,
-    color: colors.red,
-    marginLeft: 4,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    field: {
+      flexDirection: 'column',
+      gap: 6,
+      width: '100%',
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 14.4,
+      fontWeight: '500',
+    },
+    inputWrapper: {
+      position: 'relative',
+      width: '100%',
+      justifyContent: 'center',
+    },
+    input: {
+      width: '100%',
+      height: tokens.inputHeight,
+      paddingHorizontal: 16,
+      borderRadius: tokens.borderRadius,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.bgSurface,
+      color: colors.textPrimary,
+      fontSize: 15.2,
+    },
+    inputWithIcon: {
+      paddingLeft: 46,
+    },
+    inputWithEye: {
+      paddingRight: 46,
+    },
+    inputFocused: {
+      borderColor: colors.primary,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    inputError: {
+      borderColor: colors.red,
+      backgroundColor: colors.sidebarLogoutHover,
+    },
+    icon: {
+      position: 'absolute',
+      left: 14,
+      zIndex: 1,
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 15,
+      zIndex: 1,
+    },
+    error: {
+      fontSize: 12.8,
+      color: colors.red,
+      marginLeft: 4,
+    },
+  });
+}

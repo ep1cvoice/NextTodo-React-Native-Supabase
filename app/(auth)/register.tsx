@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { Mail, Lock, User } from 'lucide-react-native';
@@ -7,7 +7,8 @@ import Field from '@/components/ui/Field';
 import Button from '@/components/ui/Button';
 import Linking from '@/components/ui/Linking';
 import AuthLayout from '@/components/ui/AuthLayout';
-import { colors } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function RegisterScreen() {
   const [values, setValues] = useState({
@@ -21,6 +22,8 @@ export default function RegisterScreen() {
   const [formMessage, setFormMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const validate = (vals: typeof values) => {
     const temp: Record<string, string> = {};
@@ -123,27 +126,29 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    width: '100%',
-  },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    gap: 32,
-    paddingBottom: 24,
-  },
-  successInfo: {
-    color: colors.green,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  errorInfo: {
-    color: colors.red,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      width: '100%',
+    },
+    scroll: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      gap: 32,
+      paddingBottom: 24,
+    },
+    successInfo: {
+      color: colors.green,
+      textAlign: 'center',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    errorInfo: {
+      color: colors.red,
+      textAlign: 'center',
+      fontSize: 14,
+      fontWeight: '500',
+    },
+  });
+}
