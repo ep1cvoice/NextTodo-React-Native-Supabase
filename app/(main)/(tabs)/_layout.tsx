@@ -1,8 +1,15 @@
 import { Tabs } from 'expo-router';
 import { ListTodo, CheckCircle2, Settings } from 'lucide-react-native';
-import { colors } from '@/constants/theme';
+import { useWindowDimensions, View } from 'react-native';
+import BrandLogo from '@/components/ui/BrandLogo';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function MainTabsLayout() {
+  const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= tokens.desktopBreakpoint;
+
   return (
     <Tabs
       screenOptions={{
@@ -14,7 +21,15 @@ export default function MainTabsLayout() {
         headerStyle: {
           backgroundColor: colors.bgSurface,
         },
+        headerTintColor: colors.textPrimary,
         headerShadowVisible: false,
+        headerRight: isDesktop
+          ? () => (
+              <View style={{ paddingRight: 8 }}>
+                <BrandLogo />
+              </View>
+            )
+          : undefined,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {

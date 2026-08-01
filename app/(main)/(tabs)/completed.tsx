@@ -1,14 +1,15 @@
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
+import { useTheme } from '@/context/ThemeContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
-import { colors } from '@/constants/theme';
 
 export default function CompletedTasksScreen() {
   const { completedTasks, toggleTask, deleteTask } = useTasks();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgContent }]}>
       <FlatList
         data={completedTasks}
         keyExtractor={(item) => String(item.id)}
@@ -19,11 +20,15 @@ export default function CompletedTasksScreen() {
         ]}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
+            <View style={[styles.emptyIcon, { backgroundColor: colors.primaryLight }]}>
               <Search size={48} color={colors.primary} />
             </View>
-            <Text style={styles.emptyTitle}>No completed tasks</Text>
-            <Text style={styles.emptyText}>Mark a task as done to see it here</Text>
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              No completed tasks
+            </Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+              Mark a task as done to see it here
+            </Text>
           </View>
         }
         renderItem={({ item, index }) => (
@@ -42,7 +47,6 @@ export default function CompletedTasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bgContent,
     padding: 16,
   },
   listContent: {
@@ -62,16 +66,13 @@ const styles = StyleSheet.create({
   emptyIcon: {
     padding: 16,
     borderRadius: 999,
-    backgroundColor: colors.primaryLight,
   },
   emptyTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: colors.textSecondary,
   },
   emptyText: {
     fontSize: 14,
-    color: colors.textMuted,
     textAlign: 'center',
   },
 });

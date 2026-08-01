@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { Tag } from '@/types';
 import { MAX_TAGS_PER_TASK } from '@/types';
-import { colors } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface TagChipPickerProps {
   tags: Tag[];
@@ -10,6 +12,9 @@ interface TagChipPickerProps {
 }
 
 export default function TagChipPicker({ tags, selectedIds, onChange }: TagChipPickerProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (tags.length === 0) return null;
 
   const atLimit = selectedIds.length >= MAX_TAGS_PER_TASK;
@@ -56,50 +61,52 @@ export default function TagChipPicker({ tags, selectedIds, onChange }: TagChipPi
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: {
-    gap: 8,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 15,
-  },
-  limitNote: {
-    fontSize: 12,
-    color: colors.red,
-  },
-  chipList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    backgroundColor: colors.bgSurface,
-  },
-  chipDisabled: {
-    opacity: 0.4,
-  },
-  chipText: {
-    fontSize: 13,
-  },
-  chipTextSelected: {
-    fontWeight: '600',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    wrapper: {
+      gap: 8,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+    limitNote: {
+      fontSize: 12,
+      color: colors.red,
+    },
+    chipList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 10,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      backgroundColor: colors.bgSurface,
+    },
+    chipDisabled: {
+      opacity: 0.4,
+    },
+    chipText: {
+      fontSize: 13,
+    },
+    chipTextSelected: {
+      fontWeight: '600',
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+  });
+}

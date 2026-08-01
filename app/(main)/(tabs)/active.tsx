@@ -1,10 +1,12 @@
 import { View, StyleSheet } from 'react-native';
 import ActiveTasks from '@/components/tasks/ActiveTasks';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ActiveTasksScreen() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bgContent }]}>
       <ActiveTasks />
     </View>
   );
@@ -13,7 +15,6 @@ export default function ActiveTasksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bgContent,
     padding: 16,
   },
 });

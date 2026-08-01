@@ -1,50 +1,53 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  Pressable,
-  Modal,
-  StyleSheet,
-  useWindowDimensions,
   LayoutAnimation,
+  Modal,
   Platform,
+  Pressable,
+  StyleSheet,
+  Text,
   UIManager,
+  useWindowDimensions,
+  View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  Briefcase,
+  Book,
+  Calendar,
+  Camera,
+  Car,
   ChevronDown,
   CirclePlus,
-  Pencil,
-  Trash2,
-  X,
-  Calendar,
-  Briefcase,
-  Home,
-  Book,
-  Heart,
-  Star,
-  ShoppingCart,
-  Dumbbell,
   Code,
-  Music,
-  Camera,
-  Plane,
-  Car,
   Coffee,
+  Dumbbell,
   Gamepad2,
-  Palette,
   Globe,
+  Heart,
+  Home,
   Leaf,
-  Zap,
+  Music,
+  Palette,
+  Pencil,
+  Plane,
+  ShoppingCart,
+  Star,
   Target,
+  Trash2,
   Users,
+  X,
+  Zap,
 } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import type { CategoryIcon, Task } from '@/types';
-import { colors, tokens } from '@/constants/theme';
-import { useTasks } from '@/context/TasksContext';
-import EditTaskModal from '@/components/tasks/EditTaskModal';
+
 import CalendarModal from '@/components/tasks/CalendarModal';
+import EditTaskModal from '@/components/tasks/EditTaskModal';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTasks } from '@/context/TasksContext';
+import { useTheme } from '@/context/ThemeContext';
+import type { CategoryIcon, Task } from '@/types';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -74,11 +77,19 @@ const ICON_MAP: Record<CategoryIcon, LucideIcon> = {
 };
 
 function hexToRgb(hex: string) {
-  const h = hex.replace('#', '');
+  const cleaned = hex.replace('#', '');
+  const full =
+    cleaned.length === 3
+      ? cleaned
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : cleaned;
+  const num = parseInt(full, 16);
   return {
-    r: parseInt(h.slice(0, 2), 16),
-    g: parseInt(h.slice(2, 4), 16),
-    b: parseInt(h.slice(4, 6), 16),
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255,
   };
 }
 
@@ -92,6 +103,8 @@ interface ToDoItemProps {
 export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoItemProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < tokens.desktopBreakpoint;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { categories, tags: allTags, updateTask, setTaskScheduled } = useTasks();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -360,221 +373,218 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
   );
 }
 
-const styles = StyleSheet.create({
-  todoItem: {
-    width: '100%',
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: colors.bgTodoItem,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: tokens.borderRadius,
-    minHeight: 36,
-    gap: 4.8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  hasCategory: {
-    paddingRight: 50,
-  },
-  pressed: {
-    backgroundColor: colors.todoHighlight,
-    borderColor: 'rgba(13, 148, 136, 0.2)',
-  },
-  categoryGradient: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  categoryBgIcon: {
-    position: 'absolute',
-    right: 10,
-    top: 5,
-    width: 35,
-    height: 35,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  todoMainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    gap: 10,
-    minWidth: 0,
-  },
-  todoMainRowExpanded: {
-    alignItems: 'flex-start',
-  },
-  todoCheckbox: {
-    width: 24,
-    height: 24,
-    minWidth: 24,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checked: {
-    backgroundColor: colors.green,
-    borderColor: colors.green,
-  },
-  checkmark: {
-    fontSize: 16,
-    color: colors.textPrimary,
-    lineHeight: 18,
-  },
-  todoText: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minWidth: 0,
-    overflow: 'hidden',
-  },
-  todoTextExpanded: {
-    alignItems: 'flex-start',
-  },
-  titleText: {
-    flex: 1,
-    flexShrink: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  rotated: {
-    transform: [{ rotate: '180deg' }],
-  },
-  done: {
-    textDecorationLine: 'line-through',
-    color: colors.textMuted,
-    opacity: 0.7,
-  },
-  todoIndicators: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexShrink: 0,
-  },
-  todoDate: {
-    paddingHorizontal: 6,
-    height: 22,
-    justifyContent: 'center',
-    backgroundColor: colors.primaryLight,
-    borderRadius: tokens.borderRadius,
-  },
-  todoDateToday: {
-    backgroundColor: colors.pink,
-  },
-  todoDatePast: {
-    backgroundColor: colors.bgContent,
-  },
-  todoDateText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  todoDateTextToday: {
-    color: colors.red,
-  },
-  todoDateTextPast: {
-    color: colors.textMuted,
-  },
-  todoActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginLeft: 'auto',
-  },
-  todoActionBtn: {
-    padding: 6,
-    borderRadius: tokens.borderRadius,
-  },
-  actionPressed: {
-    backgroundColor: colors.sidebarLogoutHover,
-  },
-  mobileRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginLeft: 'auto',
-    flexShrink: 0,
-  },
-  mobilePlus: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tagChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    zIndex: 2,
-  },
-  tagChip: {
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    maxWidth: 160,
-  },
-  tagChipText: {
-    fontSize: 11,
-    fontWeight: '500',
-    lineHeight: 15.4,
-  },
-  descriptionWrapper: {
-    marginLeft: 34,
-    borderLeftWidth: 2,
-    borderLeftColor: colors.primary,
-    paddingLeft: 10,
-    paddingTop: 4,
-    paddingBottom: 2,
-  },
-  todoDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 19.6,
-  },
-  mobileOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  mobileActionsModal: {
-    width: '100%',
-    maxWidth: 420,
-    marginHorizontal: 12,
-    marginBottom: 16,
-    backgroundColor: colors.bgContent,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: tokens.borderRadius,
-    padding: 14,
-    gap: 10,
-    ...tokens.shadow,
-  },
-  mobileActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: colors.bgSurface,
-  },
-  mobileClose: {
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-  },
-  mobileActionText: {
-    fontSize: 15,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    todoItem: {
+      position: 'relative',
+      overflow: 'hidden',
+      backgroundColor: colors.bgTodoItem,
+      borderRadius: tokens.borderRadius,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      marginBottom: 10,
+      ...Platform.select({
+        web: { boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' } as object,
+        default: {
+          shadowColor: '#0f172a',
+          shadowOpacity: 0.04,
+          shadowRadius: 2,
+          shadowOffset: { width: 0, height: 1 },
+          elevation: 1,
+        },
+      }),
+    },
+    hasCategory: {
+      paddingRight: 48,
+    },
+    pressed: {
+      opacity: 0.96,
+    },
+    categoryGradient: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    categoryBgIcon: {
+      position: 'absolute',
+      right: 12,
+      top: '50%',
+      marginTop: -17,
+      zIndex: 0,
+    },
+    todoMainRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      zIndex: 1,
+    },
+    todoMainRowExpanded: {
+      alignItems: 'flex-start',
+    },
+    todoCheckbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+      marginTop: 1,
+    },
+    checked: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    checkmark: {
+      color: '#ffffff',
+      fontSize: 13,
+      fontWeight: '700',
+      lineHeight: 14,
+    },
+    todoText: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      minWidth: 0,
+    },
+    todoTextExpanded: {
+      alignItems: 'flex-start',
+    },
+    titleText: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textPrimary,
+      lineHeight: 21,
+    },
+    done: {
+      textDecorationLine: 'line-through',
+      color: colors.textMuted,
+    },
+    rotated: {
+      transform: [{ rotate: '180deg' }],
+      marginTop: 2,
+    },
+    todoIndicators: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    todoDate: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
+      backgroundColor: colors.todoHighlight,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    todoDateToday: {
+      backgroundColor: colors.primaryLight,
+      borderColor: colors.primary,
+    },
+    todoDatePast: {
+      backgroundColor: colors.pink,
+      borderColor: colors.red,
+    },
+    todoDateText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    todoDateTextToday: {
+      color: colors.primary,
+    },
+    todoDateTextPast: {
+      color: colors.red,
+    },
+    todoActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    todoActionBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    actionPressed: {
+      backgroundColor: colors.todoHighlight,
+    },
+    mobileRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    mobilePlus: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tagChipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8,
+      marginLeft: 32,
+      zIndex: 1,
+    },
+    tagChip: {
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      backgroundColor: colors.bgSurface,
+    },
+    tagChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    descriptionWrapper: {
+      marginTop: 8,
+      marginLeft: 32,
+      zIndex: 1,
+    },
+    todoDescription: {
+      fontSize: 13,
+      lineHeight: 19,
+      color: colors.textSecondary,
+    },
+    mobileOverlay: {
+      flex: 1,
+      backgroundColor: colors.overlayBg,
+      justifyContent: 'flex-end',
+    },
+    mobileActionsModal: {
+      backgroundColor: colors.bgSurface,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      paddingVertical: 8,
+      paddingHorizontal: 8,
+      borderTopWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    mobileActionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderRadius: 10,
+    },
+    mobileActionText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    mobileClose: {
+      marginTop: 4,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderColor,
+    },
+  });
+}

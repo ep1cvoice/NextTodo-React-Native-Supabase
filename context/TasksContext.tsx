@@ -23,6 +23,7 @@ interface TasksContextValue {
   toggleTask: (id: number) => void;
   deleteTask: (id: number) => void;
   deleteAllActive: () => void;
+  deleteAllCompleted: () => void;
 }
 
 const TasksContext = createContext<TasksContextValue | null>(null);
@@ -102,6 +103,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     setTasks((prev) => prev.filter((t) => t.done));
   };
 
+  const deleteAllCompleted = () => {
+    setTasks((prev) => prev.filter((t) => !t.done));
+  };
+
   return (
     <TasksContext.Provider
       value={{
@@ -116,6 +121,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         toggleTask,
         deleteTask,
         deleteAllActive,
+        deleteAllCompleted,
       }}>
       {children}
     </TasksContext.Provider>
