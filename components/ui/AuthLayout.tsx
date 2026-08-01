@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, tokens } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -12,6 +15,8 @@ interface AuthLayoutProps {
 export default function AuthLayout({ children, gap = 48, overlay }: AuthLayoutProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= tokens.desktopBreakpoint;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <LinearGradient
@@ -36,6 +41,9 @@ export default function AuthLayout({ children, gap = 48, overlay }: AuthLayoutPr
 }
 
 export function LoggingInOverlay() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.loggingInOverlay}>
       <ActivityIndicator size="large" color={colors.primary} />
@@ -44,50 +52,52 @@ export function LoggingInOverlay() {
   );
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  authLayout: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  card: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  cardMobile: {
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: 20,
-    paddingVertical: 32,
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-  },
-  cardDesktop: {
-    width: '100%',
-    maxWidth: tokens.authCardMaxWidth,
-    padding: 32,
-    backgroundColor: colors.bgAuthCard,
-    borderWidth: 1,
-    borderColor: 'rgba(13, 148, 136, 0.12)',
-    borderRadius: tokens.borderRadius,
-    ...tokens.shadow,
-  },
-  loggingInOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1000,
-    backgroundColor: 'rgba(240, 253, 250, 0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-  },
-  loggingInText: {
-    margin: 0,
-    fontSize: 25,
-    fontWeight: '500',
-    lineHeight: 40,
-    color: colors.textSecondary,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    gradient: {
+      flex: 1,
+    },
+    authLayout: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    card: {
+      flexDirection: 'column',
+      justifyContent: 'center',
+    },
+    cardMobile: {
+      flex: 1,
+      width: '100%',
+      paddingHorizontal: 20,
+      paddingVertical: 32,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+    },
+    cardDesktop: {
+      width: '100%',
+      maxWidth: tokens.authCardMaxWidth,
+      padding: 32,
+      backgroundColor: colors.bgTodoItem,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: tokens.borderRadius,
+      ...tokens.shadow,
+    },
+    loggingInOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 1000,
+      backgroundColor: colors.overlayBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 20,
+    },
+    loggingInText: {
+      margin: 0,
+      fontSize: 25,
+      fontWeight: '500',
+      lineHeight: 40,
+      color: colors.textSecondary,
+    },
+  });
+}

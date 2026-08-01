@@ -38,13 +38,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ThemeProvider>
-        <AuthProvider>
+      {/* Auth outside Theme so theme loading never remounts the session */}
+      <AuthProvider>
+        <ThemeProvider>
           <TasksProvider>
             <RootNavigation />
           </TasksProvider>
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

@@ -48,6 +48,7 @@ import { tokens } from '@/constants/theme';
 import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
 import type { CategoryIcon, Task } from '@/types';
+import { webInteractive } from '@/utils/pressableWeb';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -171,9 +172,10 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
     <>
       <Pressable
         onPress={toggleExpand}
-        style={({ pressed }) => [
+        style={({ pressed, hovered }) => [
           styles.todoItem,
           category && !isMobile ? styles.hasCategory : null,
+          hovered ? styles.itemHovered : null,
           pressed ? styles.pressed : null,
         ]}>
         {categoryGradientColors && (
@@ -194,7 +196,13 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
         <View style={[styles.todoMainRow, isExpanded && styles.todoMainRowExpanded]}>
           <Pressable
-            style={[styles.todoCheckbox, task.done && styles.checked]}
+            style={({ pressed, hovered }) => [
+              styles.todoCheckbox,
+              task.done && styles.checked,
+              hovered && !task.done && styles.checkboxHovered,
+              hovered && task.done && styles.checkboxCheckedHovered,
+              pressed && styles.controlPressed,
+            ]}
             onPress={() => onToggle(task.id)}
             hitSlop={6}>
             {task.done ? <Text style={styles.checkmark}>✓</Text> : null}
@@ -217,10 +225,12 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
                 onPress={() => {
                   if (!task.done) openCalendar();
                 }}
-                style={[
+                style={({ pressed, hovered }) => [
                   styles.todoDate,
                   isToday && styles.todoDateToday,
                   isPast && styles.todoDatePast,
+                  hovered && styles.todoDateHovered,
+                  pressed && styles.controlPressed,
                 ]}>
                 <Text
                   style={[
@@ -239,13 +249,19 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               {!task.done && (
                 <>
                   <Pressable
-                    style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
+                    style={({ pressed, hovered }) => [
+                      styles.todoActionBtn,
+                      (hovered || pressed) && styles.actionPressed,
+                    ]}
                     onPress={openCalendar}
                     hitSlop={6}>
                     <Calendar size={18} color={colors.textSecondary} />
                   </Pressable>
                   <Pressable
-                    style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
+                    style={({ pressed, hovered }) => [
+                      styles.todoActionBtn,
+                      (hovered || pressed) && styles.actionPressed,
+                    ]}
                     onPress={handleEdit}
                     hitSlop={6}>
                     <Pencil size={18} color={colors.textSecondary} />
@@ -253,7 +269,10 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
                 </>
               )}
               <Pressable
-                style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
+                style={({ pressed, hovered }) => [
+                  styles.todoActionBtn,
+                  (hovered || pressed) && styles.actionPressed,
+                ]}
                 onPress={() => onDelete(task.id)}
                 hitSlop={6}>
                 <Trash2 size={18} color={colors.textSecondary} />
@@ -385,6 +404,7 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: 14,
       paddingVertical: 12,
       marginBottom: 10,
+      ...webInteractive,
       ...Platform.select({
         web: { boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)' } as object,
         default: {
@@ -399,8 +419,15 @@ function createStyles(colors: AppColors) {
     hasCategory: {
       paddingRight: 48,
     },
+    itemHovered: {
+      borderColor: colors.primary,
+      backgroundColor: colors.todoHighlight,
+    },
     pressed: {
       opacity: 0.96,
+    },
+    controlPressed: {
+      opacity: 0.85,
     },
     categoryGradient: {
       ...StyleSheet.absoluteFillObject,
@@ -431,6 +458,14 @@ function createStyles(colors: AppColors) {
       justifyContent: 'center',
       backgroundColor: 'transparent',
       marginTop: 1,
+      ...webInteractive,
+    },
+    checkboxHovered: {
+      backgroundColor: colors.primaryLight,
+    },
+    checkboxCheckedHovered: {
+      backgroundColor: colors.primaryHover,
+      borderColor: colors.primaryHover,
     },
     checked: {
       backgroundColor: colors.primary,
@@ -476,9 +511,14 @@ function createStyles(colors: AppColors) {
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 999,
+      ...webInteractive,
       backgroundColor: colors.todoHighlight,
       borderWidth: 1,
       borderColor: colors.borderColor,
+    },
+    todoDateHovered: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
     },
     todoDateToday: {
       backgroundColor: colors.primaryLight,
@@ -510,6 +550,7 @@ function createStyles(colors: AppColors) {
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
+      ...webInteractive,
     },
     actionPressed: {
       backgroundColor: colors.todoHighlight,

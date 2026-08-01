@@ -14,6 +14,7 @@ interface ThemeContextValue {
   setTheme: (theme: ThemeMode) => void;
   colors: AppColors;
   isDark: boolean;
+  ready: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -42,13 +43,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const colors = useMemo(() => resolveColors(theme, systemDark), [theme, systemDark]);
   const isDark = theme === 'dark' || (theme === 'auto' && systemDark);
 
-  if (!ready) return null;
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, colors, isDark }}>
-      {children}
-    </ThemeContext.Provider>
+  // Always mount children — returning null remounted AuthProvider and wiped the session.
+  const value = useMemo(
+    () => ({ theme, setTheme, colors, isDark, ready }),
+    [theme, colors, isDark, ready]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): ThemeContextValue {

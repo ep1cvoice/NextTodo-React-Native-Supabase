@@ -26,6 +26,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useTasks } from '@/context/TasksContext';
 import type { ThemeMode } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
+import { webInteractive } from '@/utils/pressableWeb';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -118,15 +119,15 @@ export default function SettingsScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
       <View style={styles.panel}>
-      <Text style={styles.pageTitle}>Settings</Text>
-      <Text style={styles.signedIn}>
-        Signed in as {user?.email ?? '—'} <Text style={styles.mockTag}>(mock)</Text>
-      </Text>
-
       {/* PROFILE */}
       <View style={styles.section}>
         <Pressable
-          style={[styles.sectionHeader, openSection === 'profile' && styles.sectionHeaderActive]}
+          style={({ hovered, pressed }) => [
+            styles.sectionHeader,
+            openSection === 'profile' && styles.sectionHeaderActive,
+            openSection !== 'profile' && hovered && styles.sectionHeaderHovered,
+            pressed && styles.controlPressed,
+          ]}
           onPress={() => toggleSection('profile')}>
           <View style={styles.sectionHeaderStart}>
             <User
@@ -155,7 +156,10 @@ export default function SettingsScreen() {
             <Text style={styles.description}>{user?.email ?? '—'}</Text>
 
             <Pressable
-              style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
+              style={({ pressed, hovered }) => [
+                styles.secondaryBtn,
+                (hovered || pressed) && styles.secondaryBtnPressed,
+              ]}
               onPress={() =>
                 Alert.alert('Coming with Supabase', 'Change email / password after Auth is connected.')
               }>
@@ -169,7 +173,10 @@ export default function SettingsScreen() {
               </View>
               <Text style={styles.description}>Account delete will be available with Supabase Auth.</Text>
               <Pressable
-                style={({ pressed }) => [styles.dangerBtn, pressed && styles.dangerBtnPressed]}
+                style={({ pressed, hovered }) => [
+                  styles.dangerBtn,
+                  (hovered || pressed) && styles.dangerBtnPressed,
+                ]}
                 onPress={() =>
                   Alert.alert('Coming with Supabase', 'Delete account requires real Auth backend.')
                 }>
@@ -183,9 +190,11 @@ export default function SettingsScreen() {
       {/* PREFERENCES */}
       <View style={styles.section}>
         <Pressable
-          style={[
+          style={({ hovered, pressed }) => [
             styles.sectionHeader,
             openSection === 'preferences' && styles.sectionHeaderActive,
+            openSection !== 'preferences' && hovered && styles.sectionHeaderHovered,
+            pressed && styles.controlPressed,
           ]}
           onPress={() => toggleSection('preferences')}>
           <View style={styles.sectionHeaderStart}>
@@ -222,7 +231,13 @@ export default function SettingsScreen() {
                   <Pressable
                     key={opt.value}
                     onPress={() => setTheme(opt.value)}
-                    style={[styles.segmentBtn, active && styles.segmentBtnActive]}>
+                    style={({ hovered, pressed }) => [
+                      styles.segmentBtn,
+                      active && styles.segmentBtnActive,
+                      !active && hovered && styles.segmentBtnHovered,
+                      active && hovered && styles.segmentBtnActiveHovered,
+                      pressed && styles.controlPressed,
+                    ]}>
                     <Text style={[styles.segmentText, active && styles.segmentTextActive]}>
                       {opt.label}
                     </Text>
@@ -237,7 +252,12 @@ export default function SettingsScreen() {
       {/* DATA */}
       <View style={styles.section}>
         <Pressable
-          style={[styles.sectionHeader, openSection === 'data' && styles.sectionHeaderActive]}
+          style={({ hovered, pressed }) => [
+            styles.sectionHeader,
+            openSection === 'data' && styles.sectionHeaderActive,
+            openSection !== 'data' && hovered && styles.sectionHeaderHovered,
+            pressed && styles.controlPressed,
+          ]}
           onPress={() => toggleSection('data')}>
           <View style={styles.sectionHeaderStart}>
             <Trash2
@@ -261,7 +281,10 @@ export default function SettingsScreen() {
               Bulk delete lives here (moved out of task lists).
             </Text>
             <Pressable
-              style={({ pressed }) => [styles.dangerBtn, pressed && styles.dangerBtnPressed]}
+              style={({ pressed, hovered }) => [
+                styles.dangerBtn,
+                (hovered || pressed) && styles.dangerBtnPressed,
+              ]}
               onPress={confirmDeleteAllActive}>
               <Trash2 size={16} color={colors.red} />
               <Text style={styles.dangerBtnText}>
@@ -269,7 +292,10 @@ export default function SettingsScreen() {
               </Text>
             </Pressable>
             <Pressable
-              style={({ pressed }) => [styles.dangerBtn, pressed && styles.dangerBtnPressed]}
+              style={({ pressed, hovered }) => [
+                styles.dangerBtn,
+                (hovered || pressed) && styles.dangerBtnPressed,
+              ]}
               onPress={confirmDeleteAllCompleted}>
               <Trash2 size={16} color={colors.red} />
               <Text style={styles.dangerBtnText}>
@@ -283,9 +309,11 @@ export default function SettingsScreen() {
       {/* PRODUCTIVITY */}
       <View style={styles.section}>
         <Pressable
-          style={[
+          style={({ hovered, pressed }) => [
             styles.sectionHeader,
             openSection === 'productivity' && styles.sectionHeaderActive,
+            openSection !== 'productivity' && hovered && styles.sectionHeaderHovered,
+            pressed && styles.controlPressed,
           ]}
           onPress={() => toggleSection('productivity')}>
           <View style={styles.sectionHeaderStart}>
@@ -328,7 +356,10 @@ export default function SettingsScreen() {
               />
               <Text style={styles.description}>min</Text>
               <Pressable
-                style={({ pressed }) => [styles.primaryBtn, pressed && styles.primaryBtnPressed]}
+                style={({ pressed, hovered }) => [
+                  styles.primaryBtn,
+                  (hovered || pressed) && styles.primaryBtnPressed,
+                ]}
                 onPress={handlePomodoroSave}>
                 <Text style={styles.primaryBtnText}>Set Time</Text>
               </Pressable>
@@ -340,10 +371,15 @@ export default function SettingsScreen() {
       </View>
 
       <Pressable
-        style={({ pressed }) => [styles.logout, pressed && styles.logoutPressed]}
+        style={({ pressed, hovered }) => [
+          styles.logout,
+          (hovered || pressed) && styles.logoutPressed,
+        ]}
         onPress={handleLogout}>
-        <LogOut size={18} color={colors.sidebarLogoutText} strokeWidth={2} />
-        <Text style={styles.logoutText}>Log Out</Text>
+        <View style={styles.logoutStart}>
+          <LogOut size={20} color={colors.sidebarLogoutText} strokeWidth={2} />
+          <Text style={styles.logoutText}>Log Out</Text>
+        </View>
       </Pressable>
       </View>
     </ScrollView>
@@ -366,20 +402,6 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       maxWidth: 520,
       gap: 10,
     },
-    pageTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.textPrimary,
-    },
-    signedIn: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      marginBottom: 4,
-    },
-    mockTag: {
-      color: colors.textMuted,
-      fontSize: 13,
-    },
     section: {
       borderWidth: 1,
       borderColor: colors.borderColor,
@@ -393,9 +415,16 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       justifyContent: 'space-between',
       paddingHorizontal: 16,
       paddingVertical: 12,
+      ...webInteractive,
     },
     sectionHeaderActive: {
       backgroundColor: colors.sidebarItemActiveBg,
+    },
+    sectionHeaderHovered: {
+      backgroundColor: colors.todoHighlight,
+    },
+    controlPressed: {
+      opacity: 0.9,
     },
     sectionHeaderStart: {
       flexDirection: 'row',
@@ -441,10 +470,19 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       borderColor: colors.borderColor,
       alignItems: 'center',
       backgroundColor: colors.bgSurface,
+      ...webInteractive,
     },
     segmentBtnActive: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
+    },
+    segmentBtnHovered: {
+      backgroundColor: colors.todoHighlight,
+      borderColor: colors.primary,
+    },
+    segmentBtnActiveHovered: {
+      backgroundColor: colors.primaryHover,
+      borderColor: colors.primaryHover,
     },
     segmentText: {
       fontSize: 14,
@@ -463,6 +501,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       borderColor: colors.borderColor,
       backgroundColor: colors.bgSurface,
       alignItems: 'center',
+      ...webInteractive,
     },
     secondaryBtnPressed: {
       backgroundColor: colors.bgCardHover,
@@ -500,6 +539,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       paddingVertical: 12,
       borderRadius: 12,
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
+      ...webInteractive,
     },
     dangerBtnPressed: {
       backgroundColor: colors.sidebarLogoutHover,
@@ -532,6 +572,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       paddingHorizontal: 14,
       borderRadius: 10,
       backgroundColor: colors.primary,
+      ...webInteractive,
     },
     primaryBtnPressed: {
       backgroundColor: colors.primaryHover,
@@ -552,22 +593,32 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       fontWeight: '500',
     },
     logout: {
-      marginTop: 8,
+      marginTop: 4,
+      width: '100%',
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      alignSelf: 'flex-start',
+      justifyContent: 'flex-start',
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderRadius: tokens.borderRadius,
+      borderWidth: 1,
+      borderColor: 'rgba(239, 68, 68, 0.35)',
+      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+      ...webInteractive,
+    },
+    logoutStart: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
     },
     logoutPressed: {
       backgroundColor: colors.sidebarLogoutHover,
+      borderColor: colors.red,
     },
     logoutText: {
       color: colors.sidebarLogoutText,
-      fontSize: 15,
-      fontWeight: '500',
+      fontSize: 16,
+      fontWeight: '600',
     },
   });
 }

@@ -78,7 +78,7 @@ export const darkColors: AppColors = {
   bgSurface: '#0a3d3a',
   bgContent: '#022c22',
   bgTodoItem: '#0f4c49',
-  bgAuthCard: 'rgba(10, 61, 58, 0.88)',
+  bgAuthCard: '#0f4c49',
   bgCardHover: '#115e59',
   textPrimary: '#ecfdf5',
   textSecondary: '#99f6e4',

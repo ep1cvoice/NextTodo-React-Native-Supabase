@@ -1,6 +1,9 @@
-import { Text, StyleSheet } from 'react-native';
-import { Link, type Href } from 'expo-router';
-import { colors } from '@/constants/theme';
+import { useMemo } from 'react';
+import { Pressable, Text, StyleSheet } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
+import type { AppColors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { webInteractive } from '@/utils/pressableWeb';
 
 interface LinkingProps {
   to: Href;
@@ -8,20 +11,35 @@ interface LinkingProps {
 }
 
 export default function Linking({ to, innerText }: LinkingProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const router = useRouter();
+
   return (
-    <Link href={to} style={styles.link}>
+    <Pressable
+      onPress={() => router.push(to)}
+      style={({ hovered }) => [styles.link, hovered && styles.linkHovered]}>
       <Text style={styles.linkText}>{innerText}</Text>
-    </Link>
+    </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
-  link: {
-    alignSelf: 'center',
-  },
-  linkText: {
-    color: colors.primary,
-    textAlign: 'center',
-    fontSize: 15,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    link: {
+      alignSelf: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      ...webInteractive,
+    },
+    linkHovered: {
+      backgroundColor: colors.todoHighlight,
+    },
+    linkText: {
+      color: colors.primary,
+      textAlign: 'center',
+      fontSize: 15,
+    },
+  });
+}

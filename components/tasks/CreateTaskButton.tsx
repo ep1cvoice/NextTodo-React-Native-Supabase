@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react-native';
 import type { AppColors } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import { webInteractive } from '@/utils/pressableWeb';
 
 interface CreateTaskButtonProps {
   onPress: () => void;
@@ -21,9 +22,10 @@ export default function CreateTaskButton({
 
   return (
     <Pressable
-      style={({ pressed }) => [
+      style={({ pressed, hovered }) => [
         styles.button,
         isDesktop && styles.buttonDesktop,
+        hovered && styles.hovered,
         pressed && styles.pressed,
       ]}
       onPress={onPress}>
@@ -46,14 +48,19 @@ function createStyles(colors: AppColors) {
       borderRadius: tokens.borderRadius,
       gap: 8,
       width: '100%',
+      ...webInteractive,
     },
     buttonDesktop: {
       width: '100%',
       maxWidth: 320,
       alignSelf: 'flex-end',
     },
+    hovered: {
+      backgroundColor: colors.primaryHover,
+    },
     pressed: {
       backgroundColor: colors.primaryHover,
+      opacity: 0.92,
     },
     label: {
       color: '#fff',
