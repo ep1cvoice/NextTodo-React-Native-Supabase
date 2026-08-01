@@ -17,6 +17,7 @@ import {
   Pencil,
   Trash2,
   X,
+  Calendar,
   Briefcase,
   Home,
   Book,
@@ -43,6 +44,7 @@ import type { CategoryIcon, Task } from '@/types';
 import { colors, tokens } from '@/constants/theme';
 import { useTasks } from '@/context/TasksContext';
 import EditTaskModal from '@/components/tasks/EditTaskModal';
+import CalendarModal from '@/components/tasks/CalendarModal';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -90,11 +92,12 @@ interface ToDoItemProps {
 export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoItemProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < tokens.desktopBreakpoint;
-  const { categories, tags: allTags, updateTask } = useTasks();
+  const { categories, tags: allTags, updateTask, setTaskScheduled } = useTasks();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   const category = task.category;
   const tags = task.tags ?? [];
@@ -133,6 +136,22 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
   const handleEdit = () => {
     setShowEditModal(true);
+  };
+
+  const openCalendar = () => {
+    setShowCalendarModal(true);
+  };
+
+  const handleClearDate = () => {
+    setTaskScheduled(task.id, null);
+    setShowCalendarModal(false);
+  };
+
+  const handleConfirmDate = (date: Date) => {
+    const normalized = new Date(date);
+    normalized.setHours(12, 0, 0, 0);
+    setTaskScheduled(task.id, normalized.toISOString());
+    setShowCalendarModal(false);
   };
 
   return (
@@ -181,7 +200,10 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
           <View style={styles.todoIndicators}>
             {dueDate && (
-              <View
+              <Pressable
+                onPress={() => {
+                  if (!task.done) openCalendar();
+                }}
                 style={[
                   styles.todoDate,
                   isToday && styles.todoDateToday,
@@ -195,19 +217,27 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
                   ]}>
                   {dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                 </Text>
-              </View>
+              </Pressable>
             )}
           </View>
 
           {!isMobile && (
             <View style={styles.todoActions}>
               {!task.done && (
-                <Pressable
-                  style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
-                  onPress={handleEdit}
-                  hitSlop={6}>
-                  <Pencil size={18} color={colors.textSecondary} />
-                </Pressable>
+                <>
+                  <Pressable
+                    style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
+                    onPress={openCalendar}
+                    hitSlop={6}>
+                    <Calendar size={18} color={colors.textSecondary} />
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
+                    onPress={handleEdit}
+                    hitSlop={6}>
+                    <Pencil size={18} color={colors.textSecondary} />
+                  </Pressable>
+                </>
               )}
               <Pressable
                 style={({ pressed }) => [styles.todoActionBtn, pressed && styles.actionPressed]}
@@ -274,6 +304,16 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               style={styles.mobileActionRow}
               onPress={() => {
                 setShowMobileActions(false);
+                openCalendar();
+              }}>
+              <Calendar size={18} color={colors.textPrimary} />
+              <Text style={styles.mobileActionText}>Calendar</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.mobileActionRow}
+              onPress={() => {
+                setShowMobileActions(false);
                 handleEdit();
               }}>
               <Pencil size={18} color={colors.textPrimary} />
@@ -307,6 +347,14 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
         tags={allTags}
         onClose={() => setShowEditModal(false)}
         onUpdate={updateTask}
+      />
+
+      <CalendarModal
+        visible={showCalendarModal}
+        selected={dueDate}
+        onClose={() => setShowCalendarModal(false)}
+        onClear={handleClearDate}
+        onConfirm={handleConfirmDate}
       />
     </>
   );
