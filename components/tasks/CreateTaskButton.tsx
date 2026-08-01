@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { Plus } from 'lucide-react-native';
-import { colors, tokens } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface CreateTaskButtonProps {
   onPress: () => void;
@@ -13,6 +16,8 @@ export default function CreateTaskButton({
 }: CreateTaskButtonProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= tokens.desktopBreakpoint;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <Pressable
@@ -28,30 +33,32 @@ export default function CreateTaskButton({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    paddingVertical: 12,
-    paddingHorizontal: 26,
-    backgroundColor: colors.primary,
-    borderRadius: tokens.borderRadius,
-    gap: 8,
-    width: '100%',
-  },
-  buttonDesktop: {
-    width: '33%',
-    maxWidth: 320,
-    alignSelf: 'flex-end',
-  },
-  pressed: {
-    backgroundColor: colors.primaryHover,
-  },
-  label: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    button: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 48,
+      paddingVertical: 12,
+      paddingHorizontal: 26,
+      backgroundColor: colors.primary,
+      borderRadius: tokens.borderRadius,
+      gap: 8,
+      width: '100%',
+    },
+    buttonDesktop: {
+      width: '33%',
+      maxWidth: 320,
+      alignSelf: 'flex-end',
+    },
+    pressed: {
+      backgroundColor: colors.primaryHover,
+    },
+    label: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

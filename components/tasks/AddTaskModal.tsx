@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import {
 import { X, Plus } from 'lucide-react-native';
 import type { Category, Tag } from '@/types';
 import TagChipPicker from '@/components/tasks/TagChipPicker';
-import { colors, tokens } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface AddTaskModalProps {
   visible: boolean;
@@ -42,6 +44,8 @@ export default function AddTaskModal({
 }: AddTaskModalProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < 480;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -207,142 +211,144 @@ export default function AddTaskModal({
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-  },
-  overlayMobile: {
-    justifyContent: 'flex-end',
-  },
-  modal: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: colors.bgContent,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: tokens.borderRadius,
-    overflow: 'hidden',
-    ...tokens.shadow,
-  },
-  modalMobile: {
-    marginBottom: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.bgSurface,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderColor,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontWeight: '500',
-    fontSize: 18,
-  },
-  closeBtn: {
-    padding: 6,
-    borderRadius: 8,
-  },
-  form: {
-    padding: 18,
-    gap: 16,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    marginBottom: 2,
-  },
-  input: {
-    width: '100%',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    backgroundColor: colors.bgSurface,
-    color: colors.textPrimary,
-    fontSize: 15,
-  },
-  textarea: {
-    minHeight: 88,
-  },
-  inputError: {
-    borderColor: colors.red,
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
-  },
-  inputErrorMsg: {
-    marginTop: 2,
-    color: colors.red,
-    fontSize: 13,
-  },
-  categoryList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  categoryChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: colors.borderColor,
-    backgroundColor: colors.bgSurface,
-  },
-  categoryChipSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  categoryChipText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  categoryChipTextSelected: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 6,
-  },
-  btn: {
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  cancel: {
-    backgroundColor: 'transparent',
-  },
-  cancelPressed: {
-    backgroundColor: colors.bgSurface,
-  },
-  cancelText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  add: {
-    backgroundColor: colors.primary,
-  },
-  addPressed: {
-    backgroundColor: colors.primaryHover,
-  },
-  addText: {
-    fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    flex: { flex: 1 },
+    overlay: {
+      flex: 1,
+      backgroundColor: colors.overlayBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+    },
+    overlayMobile: {
+      justifyContent: 'flex-end',
+    },
+    modal: {
+      width: '100%',
+      maxWidth: 420,
+      backgroundColor: colors.bgContent,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: tokens.borderRadius,
+      overflow: 'hidden',
+      ...tokens.shadow,
+    },
+    modalMobile: {
+      marginBottom: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.bgSurface,
+      paddingVertical: 16,
+      paddingHorizontal: 18,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.borderColor,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontWeight: '500',
+      fontSize: 18,
+    },
+    closeBtn: {
+      padding: 6,
+      borderRadius: 8,
+    },
+    form: {
+      padding: 18,
+      gap: 16,
+    },
+    inputGroup: {
+      gap: 6,
+    },
+    label: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      marginBottom: 2,
+    },
+    input: {
+      width: '100%',
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.bgSurface,
+      color: colors.textPrimary,
+      fontSize: 15,
+    },
+    textarea: {
+      minHeight: 88,
+    },
+    inputError: {
+      borderColor: colors.red,
+      backgroundColor: colors.sidebarLogoutHover,
+    },
+    inputErrorMsg: {
+      marginTop: 2,
+      color: colors.red,
+      fontSize: 13,
+    },
+    categoryList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    categoryChip: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 999,
+      borderWidth: 1.5,
+      borderColor: colors.borderColor,
+      backgroundColor: colors.bgSurface,
+    },
+    categoryChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    categoryChipText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    categoryChipTextSelected: {
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 10,
+      marginTop: 6,
+    },
+    btn: {
+      borderRadius: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    cancel: {
+      backgroundColor: 'transparent',
+    },
+    cancelPressed: {
+      backgroundColor: colors.bgSurface,
+    },
+    cancelText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    add: {
+      backgroundColor: colors.primary,
+    },
+    addPressed: {
+      backgroundColor: colors.primaryHover,
+    },
+    addText: {
+      fontSize: 14,
+      color: '#fff',
+      fontWeight: '600',
+    },
+  });
+}

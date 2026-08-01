@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
+import { useTheme } from '@/context/ThemeContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
 import CreateTaskButton from '@/components/tasks/CreateTaskButton';
 import AddTaskModal from '@/components/tasks/AddTaskModal';
-import { colors } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
 
 export default function ActiveTasks() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { activeTasks, categories, tags, addTask, toggleTask, deleteTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -58,56 +61,58 @@ export default function ActiveTasks() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    minHeight: 0,
-  },
-  tasksList: {
-    flex: 1,
-    minHeight: 0,
-  },
-  tasksContent: {
-    paddingBottom: 10,
-    flexGrow: 1,
-  },
-  tasksContentEmpty: {
-    flexGrow: 1,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 40,
-    gap: 12,
-  },
-  emptyIconWrap: {
-    padding: 20,
-    borderRadius: 999,
-    backgroundColor: colors.primaryLight,
-    borderWidth: 12,
-    borderColor: 'rgba(15, 23, 42, 0.04)',
-  },
-  emptyTitle: {
-    margin: 0,
-    fontSize: 17,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  emptyText: {
-    margin: 0,
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-  activeFooter: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: 10,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      minHeight: 0,
+    },
+    tasksList: {
+      flex: 1,
+      minHeight: 0,
+    },
+    tasksContent: {
+      paddingBottom: 10,
+      flexGrow: 1,
+    },
+    tasksContentEmpty: {
+      flexGrow: 1,
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 40,
+      gap: 12,
+    },
+    emptyIconWrap: {
+      padding: 20,
+      borderRadius: 999,
+      backgroundColor: colors.primaryLight,
+      borderWidth: 12,
+      borderColor: colors.todoHighlight,
+    },
+    emptyTitle: {
+      margin: 0,
+      fontSize: 17,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    emptyText: {
+      margin: 0,
+      fontSize: 14,
+      color: colors.textMuted,
+      textAlign: 'center',
+    },
+    activeFooter: {
+      width: '100%',
+      alignItems: 'center',
+      paddingTop: 10,
+    },
+  });
+}

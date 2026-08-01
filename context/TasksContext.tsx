@@ -19,9 +19,11 @@ interface TasksContextValue {
   tags: Tag[];
   addTask: (input: AddTaskInput) => void;
   updateTask: (id: number, input: UpdateTaskInput) => void;
+  setTaskScheduled: (id: number, scheduled: string | null) => void;
   toggleTask: (id: number) => void;
   deleteTask: (id: number) => void;
   deleteAllActive: () => void;
+  deleteAllCompleted: () => void;
 }
 
 const TasksContext = createContext<TasksContextValue | null>(null);
@@ -85,6 +87,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const setTaskScheduled = (id: number, scheduled: string | null) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, scheduled } : t)));
+  };
+
   const toggleTask = (id: number) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
   };
@@ -97,6 +103,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     setTasks((prev) => prev.filter((t) => t.done));
   };
 
+  const deleteAllCompleted = () => {
+    setTasks((prev) => prev.filter((t) => !t.done));
+  };
+
   return (
     <TasksContext.Provider
       value={{
@@ -107,9 +117,11 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         tags,
         addTask,
         updateTask,
+        setTaskScheduled,
         toggleTask,
         deleteTask,
         deleteAllActive,
+        deleteAllCompleted,
       }}>
       {children}
     </TasksContext.Provider>
