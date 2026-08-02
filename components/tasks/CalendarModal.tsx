@@ -8,7 +8,10 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react-native';
-import { colors, tokens } from '@/constants/theme';
+import type { AppColors } from '@/constants/theme';
+import { tokens } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { webInteractive } from '@/utils/pressableWeb';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -43,6 +46,8 @@ export default function CalendarModal({
 }: CalendarModalProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < 480;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const today = useMemo(() => startOfDay(new Date()), []);
 
   const [draft, setDraft] = useState<Date | null>(selected);
@@ -168,21 +173,21 @@ export default function CalendarModal({
           <View style={styles.footer}>
             <Pressable
               onPress={onClear}
-              style={({ pressed }) => [
+              style={({ pressed, hovered }) => [
                 styles.footerBtn,
                 styles.clearBtn,
-                pressed && styles.clearPressed,
+                (hovered || pressed) && styles.clearPressed,
               ]}>
               <Text style={styles.clearText}>Clear date</Text>
             </Pressable>
             <Pressable
               disabled={!canConfirm}
               onPress={() => draft && onConfirm(draft)}
-              style={({ pressed }) => [
+              style={({ pressed, hovered }) => [
                 styles.footerBtn,
                 styles.setBtn,
                 !canConfirm && styles.setDisabled,
-                pressed && canConfirm && styles.setPressed,
+                canConfirm && (hovered || pressed) && styles.setPressed,
               ]}>
               <Text style={styles.setText}>Set Date</Text>
             </Pressable>
@@ -193,146 +198,152 @@ export default function CalendarModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-  },
-  overlayMobile: {
-    justifyContent: 'flex-end',
-  },
-  modal: {
-    width: '100%',
-    maxWidth: 360,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderColor,
-    borderRadius: tokens.borderRadius,
-    padding: 20,
-    ...tokens.shadow,
-  },
-  modalMobile: {
-    marginBottom: 16,
-    maxWidth: 420,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: colors.textPrimary,
-  },
-  closeBtn: {
-    padding: 4,
-    borderRadius: 8,
-  },
-  monthNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  navBtn: {
-    padding: 6,
-    borderRadius: 8,
-  },
-  monthLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  weekdayCell: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-  },
-  cell: {
-    flex: 1,
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  weekday: {
-    textAlign: 'center',
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  dayInner: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  daySelected: {
-    backgroundColor: colors.primary,
-  },
-  dayToday: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  dayDisabled: {
-    opacity: 0.35,
-  },
-  dayText: {
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  dayTextSelected: {
-    color: '#fff',
-    fontWeight: '700',
-  },
-  dayTextDisabled: {
-    color: colors.textMuted,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 16,
-  },
-  footerBtn: {
-    flex: 1,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clearBtn: {
-    backgroundColor: 'transparent',
-  },
-  clearPressed: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-  },
-  clearText: {
-    color: colors.red,
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  setBtn: {
-    backgroundColor: colors.primary,
-  },
-  setPressed: {
-    backgroundColor: colors.primaryHover,
-  },
-  setDisabled: {
-    opacity: 0.45,
-  },
-  setText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 12,
+    },
+    overlayMobile: {
+      justifyContent: 'flex-end',
+    },
+    modal: {
+      width: '100%',
+      maxWidth: 360,
+      backgroundColor: colors.bgContent,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+      borderRadius: tokens.borderRadius,
+      padding: 20,
+      ...tokens.shadow,
+    },
+    modalMobile: {
+      marginBottom: 16,
+      maxWidth: 420,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '500',
+      color: colors.textPrimary,
+    },
+    closeBtn: {
+      padding: 4,
+      borderRadius: 8,
+      ...webInteractive,
+    },
+    monthNav: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    navBtn: {
+      padding: 6,
+      borderRadius: 8,
+      ...webInteractive,
+    },
+    monthLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textPrimary,
+    },
+    weekRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    weekdayCell: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+    },
+    cell: {
+      flex: 1,
+      aspectRatio: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    weekday: {
+      textAlign: 'center',
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    dayInner: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...webInteractive,
+    },
+    daySelected: {
+      backgroundColor: colors.primary,
+    },
+    dayToday: {
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+    },
+    dayDisabled: {
+      opacity: 0.35,
+    },
+    dayText: {
+      fontSize: 14,
+      color: colors.textPrimary,
+    },
+    dayTextSelected: {
+      color: '#fff',
+      fontWeight: '700',
+    },
+    dayTextDisabled: {
+      color: colors.textMuted,
+    },
+    footer: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 16,
+    },
+    footerBtn: {
+      flex: 1,
+      height: 40,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...webInteractive,
+    },
+    clearBtn: {
+      backgroundColor: 'transparent',
+    },
+    clearPressed: {
+      backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    },
+    clearText: {
+      color: colors.red,
+      fontWeight: '500',
+      fontSize: 14,
+    },
+    setBtn: {
+      backgroundColor: colors.primary,
+    },
+    setPressed: {
+      backgroundColor: colors.primaryHover,
+    },
+    setDisabled: {
+      opacity: 0.45,
+    },
+    setText: {
+      color: '#fff',
+      fontWeight: '600',
+      fontSize: 14,
+    },
+  });
+}
