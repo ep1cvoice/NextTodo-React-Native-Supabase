@@ -6,6 +6,7 @@ import type { AppColors } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
 import { usePomodoro } from '@/context/PomodoroContext';
 import { useTheme } from '@/context/ThemeContext';
+import { playPomodoroAlarm, stopPomodoroAlarm } from '@/utils/pomodoroAlarm';
 import { webInteractive } from '@/utils/pressableWeb';
 
 interface PomodoroTimerProps {
@@ -41,6 +42,7 @@ export default function PomodoroTimer({ taskId }: PomodoroTimerProps) {
       setSeconds(0);
       setShowAlarm(false);
       alarmedRef.current = false;
+      void stopPomodoroAlarm();
       return;
     }
 
@@ -52,6 +54,7 @@ export default function PomodoroTimer({ taskId }: PomodoroTimerProps) {
         alarmedRef.current = true;
         setShowAlarm(true);
         if (!activePomo.pausedAt) pausePomo();
+        void playPomodoroAlarm();
       }
     };
 
@@ -60,13 +63,24 @@ export default function PomodoroTimer({ taskId }: PomodoroTimerProps) {
     return () => clearInterval(interval);
   }, [show, activePomo, getElapsedSeconds, pausePomo]);
 
+  useEffect(() => {
+    return () => {
+      void stopPomodoroAlarm();
+    };
+  }, []);
+
   if (!show || !activePomo) return null;
 
   const isPaused = !!activePomo.pausedAt || showAlarm;
 
-  const handleDismissAlarm = () => {
+  const stopAlarmAndEnd = () => {
+    void stopPomodoroAlarm();
     setShowAlarm(false);
     endPomo();
+  };
+
+  const handleDismissAlarm = () => {
+    stopAlarmAndEnd();
   };
 
   return (
@@ -96,10 +110,7 @@ export default function PomodoroTimer({ taskId }: PomodoroTimerProps) {
         <PomodoroHistory />
 
         <Pressable
-          onPress={() => {
-            setShowAlarm(false);
-            endPomo();
-          }}
+          onPress={stopAlarmAndEnd}
           hitSlop={8}
           style={({ pressed, hovered }) => [
             styles.btn,
