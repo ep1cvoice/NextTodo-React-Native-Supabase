@@ -55,7 +55,24 @@ Działa na **Windows**, **Linux** i **macOS**. Telefon: **Expo Go** (iOS / Andro
 git clone <url-tego-repo>
 cd NextTodo-React-Native-Supabase
 npm install
+cp .env .env.local
 ```
+
+Zmień wartości w `.env.local`. Plik `.env.local` jest zawsze ładowany jako pierwszy.
+
+### 2. Inicjalizacja supabase
+Należy wygenerować access_token, będzie on przechowywany lokalnie na danej maszynie.
+Nie może pod żadnym pozorem trafić do pliku `.env`.
+```bash
+npx supabase login
+```
+
+Jeżeli typy nie są wygenerowane:
+```bash
+npx supabase link --project-ref project_id
+npx supabase gen types typescript --linked > types/database.ts
+```
+Ref `project_id` można znaleźć w ustawieniach projektu.
 
 ### 2. Start serwera deweloperskiego
 

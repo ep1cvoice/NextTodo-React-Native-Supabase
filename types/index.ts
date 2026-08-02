@@ -8,7 +8,7 @@ export interface UserSettings {
 }
 
 export interface User {
-  id: number;
+  id: string; // uuid
   username: string;
   email: string;
   settings?: UserSettings;
@@ -18,7 +18,8 @@ export interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
-  setUser: Dispatch<SetStateAction<User | null>>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
 }
 
@@ -71,4 +72,3 @@ export type CategoryIcon =
   | 'Zap'
   | 'Target'
   | 'Users';
-

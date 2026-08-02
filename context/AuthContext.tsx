@@ -1,54 +1,101 @@
-import { createContext, useContext, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/supabase/client';
 import type { AuthContextValue, User } from '@/types';
 
-const STORAGE_KEY = 'flowtodo.user';
-
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const PROFILE_RETRY_ATTEMPTS = 3;
+const PROFILE_RETRY_DELAY_MS = 500;
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchProfile(
+  userId: string,
+  email: string | undefined,
+  attempt = 1
+): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('username, theme, notification_type, pomodoro_time, view')
+    .eq('id', userId)
+    .single();
+
+  if (error || !data) {
+    if (attempt < PROFILE_RETRY_ATTEMPTS) {
+      await wait(PROFILE_RETRY_DELAY_MS * attempt);
+      return fetchProfile(userId, email, attempt + 1);
+    }
+    console.warn('fetchProfile failed after retries:', error?.message);
+    return null;
+  }
+
+  return {
+    id: userId,
+    email: email ?? '',
+    username: data.username ?? '',
+    settings: {
+      theme: data.theme ?? undefined,
+      notificationType: data.notification_type ?? undefined,
+      pomodoroTime: data.pomodoro_time != null ? Number(data.pomodoro_time) : undefined,
+      view: data.view ?? undefined,
+    },
+  };
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((raw) => {
-        if (!raw) return;
-        try {
-          const parsed = JSON.parse(raw) as User;
-          if (parsed?.id && parsed?.email) setUserState(parsed);
-        } catch {
-          // ignore corrupt session
-        }
-      })
-      .finally(() => setLoading(false));
+    let isMounted = true;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id, session.user.email);
+        if (isMounted) setUserState(profile);
+      }
+      if (isMounted) setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        const profile = await fetchProfile(session.user.id, session.user.email);
+        if (isMounted) setUserState(profile);
+      } else {
+        if (isMounted) setUserState(null);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const setUser: Dispatch<SetStateAction<User | null>> = (value) => {
-    setUserState((prev) => {
-      const next = typeof value === 'function' ? value(prev) : value;
-      if (next) {
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next)).catch(() => {});
-      } else {
-        AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
-      }
-      return next;
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  };
+
+  const signUp = async (email: string, password: string, username: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username } },
     });
+    return { error: error?.message ?? null };
   };
 
   const logout = async () => {
-    setUser(null);
+    await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        loading,
-        setUser,
-        logout,
-      }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, signIn, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );
