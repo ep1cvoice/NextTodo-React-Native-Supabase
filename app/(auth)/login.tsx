@@ -18,8 +18,7 @@ export default function LoginScreen() {
   const [loggingIn, setLoggingIn] = useState(false);
   const [formMessage, setFormMessage] = useState('');
   const [isError, setIsError] = useState(false);
-
-  const { setUser } = useAuth();
+  const { signIn } = useAuth();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
@@ -52,30 +51,28 @@ export default function LoginScreen() {
     setLoggingIn(true);
     setFormMessage('');
     setIsError(false);
-    setUser({
-      id: 1,
-      username: values.email.split('@')[0] || 'demo',
-      email: values.email,
-      settings: { theme: 'light', pomodoroTime: 25, view: 'window' },
-    });
 
-    setTimeout(() => {
-      router.replace('/(main)/(tabs)/active' as Href);
-    }, 800);
+    const { error } = await signIn(values.email, values.password);
 
+    if (error) {
+      setLoggingIn(false);
+      setIsError(true);
+      setFormMessage(error);
+      return false;
+    }
+
+    router.replace('/(main)/(tabs)/active' as Href);
     return false;
   };
 
   return (
     <AuthLayout gap={48} overlay={loggingIn ? <LoggingInOverlay /> : null}>
       <Heading title="Welcome Back" text="Sign in to manage your tasks" />
-
       {!!displayMessage && (
         <Text style={displayIsError ? styles.errorInfo : styles.successInfo}>
           {displayMessage}
         </Text>
       )}
-
       <Field
         innerText="Enter your email"
         Icon={Mail}
@@ -89,7 +86,6 @@ export default function LoginScreen() {
         }}
         error={submitted ? errors.email : ''}
       />
-
       <Field
         innerText="Enter your password"
         Icon={Lock}
@@ -103,7 +99,6 @@ export default function LoginScreen() {
         }}
         error={submitted ? errors.password : ''}
       />
-
       <Button inner="Sign in" onPress={handleSubmit} />
       <Linking to={'/(auth)/register' as Href} innerText="Don't have an account? Sign up" />
     </AuthLayout>

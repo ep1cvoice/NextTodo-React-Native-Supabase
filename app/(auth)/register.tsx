@@ -9,6 +9,7 @@ import Linking from '@/components/ui/Linking';
 import AuthLayout from '@/components/ui/AuthLayout';
 import type { AppColors } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterScreen() {
   const [values, setValues] = useState({
@@ -21,9 +22,11 @@ export default function RegisterScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [formMessage, setFormMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { signUp } = useAuth();
 
   const validate = (vals: typeof values) => {
     const temp: Record<string, string> = {};
@@ -59,8 +62,20 @@ export default function RegisterScreen() {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length !== 0) return false;
 
+    setSubmitting(true);
     setFormMessage('');
     setIsError(false);
+
+    const { error } = await signUp(values.email, values.password, values.username);
+
+    setSubmitting(false);
+
+    if (error) {
+      setIsError(true);
+      setFormMessage(error);
+      return false;
+    }
+
     router.replace({ pathname: '/(auth)/login', params: { registered: '1' } } as Href);
     return false;
   };
@@ -119,7 +134,7 @@ export default function RegisterScreen() {
           error={submitted ? errors.confirmPassword : ''}
         />
 
-        <Button inner="Create account" onPress={handleSubmit} />
+        <Button inner="Create account" onPress={handleSubmit} disabled={submitting} />
         <Linking to={'/(auth)/login' as Href} innerText="Already have an account? Sign in" />
       </ScrollView>
     </AuthLayout>

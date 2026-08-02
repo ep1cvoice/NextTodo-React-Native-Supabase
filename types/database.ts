@@ -1,0 +1,407 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      _TaskToTag: {
+        Row: {
+          A: number
+          B: number
+        }
+        Insert: {
+          A: number
+          B: number
+        }
+        Update: {
+          A?: number
+          B?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "_TaskToTag_A_fkey"
+            columns: ["A"]
+            isOneToOne: false
+            referencedRelation: "Tag"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "_TaskToTag_B_fkey"
+            columns: ["B"]
+            isOneToOne: false
+            referencedRelation: "Tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Category: {
+        Row: {
+          color: string
+          icon: string
+          id: number
+          name: string
+          userid: string
+        }
+        Insert: {
+          color: string
+          icon: string
+          id?: number
+          name: string
+          userid: string
+        }
+        Update: {
+          color?: string
+          icon?: string
+          id?: number
+          name?: string
+          userid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Category_userid_fkey"
+            columns: ["userid"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Pomo: {
+        Row: {
+          duration: number
+          elapsed: number
+          endedAt: string | null
+          id: string
+          pausedAt: string | null
+          startedAt: string
+          taskId: number
+          userId: string
+        }
+        Insert: {
+          duration: number
+          elapsed?: number
+          endedAt?: string | null
+          id: string
+          pausedAt?: string | null
+          startedAt?: string
+          taskId: number
+          userId: string
+        }
+        Update: {
+          duration?: number
+          elapsed?: number
+          endedAt?: string | null
+          id?: string
+          pausedAt?: string | null
+          startedAt?: string
+          taskId?: number
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Pomo_taskId_fkey"
+            columns: ["taskId"]
+            isOneToOne: false
+            referencedRelation: "Tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Pomo_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          notification_type: string | null
+          pomodoro_time: number | null
+          theme: string | null
+          username: string
+          view: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          notification_type?: string | null
+          pomodoro_time?: number | null
+          theme?: string | null
+          username: string
+          view?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notification_type?: string | null
+          pomodoro_time?: number | null
+          theme?: string | null
+          username?: string
+          view?: string | null
+        }
+        Relationships: []
+      }
+      Tag: {
+        Row: {
+          color: string
+          id: number
+          name: string
+          userId: string
+        }
+        Insert: {
+          color?: string
+          id?: number
+          name: string
+          userId: string
+        }
+        Update: {
+          color?: string
+          id?: number
+          name?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Tag_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      Tasks: {
+        Row: {
+          categoryId: number | null
+          created: string
+          id: number
+          isFinished: boolean
+          modified: string
+          scheduled: string | null
+          sortOrder: number
+          taskDesc: string
+          taskName: string
+          userId: string
+        }
+        Insert: {
+          categoryId?: number | null
+          created?: string
+          id?: number
+          isFinished?: boolean
+          modified: string
+          scheduled?: string | null
+          sortOrder?: number
+          taskDesc: string
+          taskName: string
+          userId?: string
+        }
+        Update: {
+          categoryId?: number | null
+          created?: string
+          id?: number
+          isFinished?: boolean
+          modified?: string
+          scheduled?: string | null
+          sortOrder?: number
+          taskDesc?: string
+          taskName?: string
+          userId?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "Tasks_categoryId_fkey"
+            columns: ["categoryId"]
+            isOneToOne: false
+            referencedRelation: "Category"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "Tasks_userId_fkey"
+            columns: ["userId"]
+            isOneToOne: false
+            referencedRelation: "User"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      User: {
+        Row: {
+          email: string | null
+          id: string
+          isActive: boolean | null
+          lastLogin: string | null
+          password: string | null
+          settings: Json | null
+          username: string
+        }
+        Insert: {
+          email?: string | null
+          id?: string
+          isActive?: boolean | null
+          lastLogin?: string | null
+          password?: string | null
+          settings?: Json | null
+          username: string
+        }
+        Update: {
+          email?: string | null
+          id?: string
+          isActive?: boolean | null
+          lastLogin?: string | null
+          password?: string | null
+          settings?: Json | null
+          username?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
