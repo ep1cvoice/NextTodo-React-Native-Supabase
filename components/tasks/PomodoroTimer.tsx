@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
 import { AlarmClock, Pause, Play, X } from 'lucide-react-native';
-import PomodoroHistory from '@/components/tasks/PomodoroHistory';
 import type { AppColors } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
 import { usePomodoro } from '@/context/PomodoroContext';
@@ -106,8 +105,6 @@ export default function PomodoroTimer({ taskId }: PomodoroTimerProps) {
             <Pause size={14} color={colors.textPrimary} />
           )}
         </Pressable>
-
-        <PomodoroHistory />
 
         <Pressable
           onPress={stopAlarmAndEnd}
