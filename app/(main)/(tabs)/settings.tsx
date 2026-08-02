@@ -15,15 +15,19 @@ import { useRouter, type Href } from 'expo-router';
 import {
   User,
   SlidersHorizontal,
+  Tags,
   Zap,
   Trash2,
   LogOut,
   Plus,
   AlertTriangle,
 } from 'lucide-react-native';
+import CategoryModal from '@/components/tasks/CategoryModal';
+import TagModal from '@/components/tasks/TagModal';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useTasks } from '@/context/TasksContext';
+import type { CategoryIcon } from '@/types';
 import type { ThemeMode } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
 import { webInteractive } from '@/utils/pressableWeb';
@@ -32,21 +36,34 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-type SectionKey = 'profile' | 'preferences' | 'data' | 'productivity';
+type SectionKey = 'profile' | 'preferences' | 'labels' | 'data' | 'productivity';
 
 export default function SettingsScreen() {
   const { user, setUser, logout } = useAuth();
   const { theme, setTheme, colors } = useTheme();
-  const { activeTasks, completedTasks, deleteAllActive, deleteAllCompleted } = useTasks();
+  const {
+    activeTasks,
+    completedTasks,
+    categories,
+    tags,
+    addCategory,
+    addTag,
+    deleteCategory,
+    deleteTag,
+    deleteAllActive,
+    deleteAllCompleted,
+  } = useTasks();
   const router = useRouter();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const [openSection, setOpenSection] = useState<SectionKey | null>('preferences');
+  const [openSection, setOpenSection] = useState<SectionKey | null>(null);
   const [pomodoroTime, setPomodoroTime] = useState<string>(
     String(user?.settings?.pomodoroTime ?? 25)
   );
   const [pomodoroMsg, setPomodoroMsg] = useState('');
   const [pomodoroErr, setPomodoroErr] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
 
   const toggleSection = (key: SectionKey) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -103,6 +120,28 @@ export default function SettingsScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: deleteAllCompleted },
+      ]
+    );
+  };
+
+  const confirmDeleteCategory = (id: number, name: string) => {
+    Alert.alert(
+      'Remove category?',
+      `Remove "${name}"? Tasks keep their title; this category will be cleared.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => deleteCategory(id) },
+      ]
+    );
+  };
+
+  const confirmDeleteTag = (id: number, name: string) => {
+    Alert.alert(
+      'Remove tag?',
+      `Remove "#${name}"? It will be removed from any tasks that use it.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => deleteTag(id) },
       ]
     );
   };
@@ -249,6 +288,126 @@ export default function SettingsScreen() {
         )}
       </View>
 
+      {/* CATEGORIES & TAGS */}
+      <View style={styles.section}>
+        <Pressable
+          style={({ hovered, pressed }) => [
+            styles.sectionHeader,
+            openSection === 'labels' && styles.sectionHeaderActive,
+            openSection !== 'labels' && hovered && styles.sectionHeaderHovered,
+            pressed && styles.controlPressed,
+          ]}
+          onPress={() => toggleSection('labels')}>
+          <View style={styles.sectionHeaderStart}>
+            <Tags
+              size={22}
+              color={
+                openSection === 'labels' ? colors.sidebarItemActiveText : colors.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.sectionTitle,
+                openSection === 'labels' && styles.sectionTitleActive,
+              ]}>
+              Categories & Tags
+            </Text>
+          </View>
+          <Plus
+            size={22}
+            color={
+              openSection === 'labels' ? colors.sidebarItemActiveText : colors.textSecondary
+            }
+            style={openSection === 'labels' ? styles.iconRotated : undefined}
+          />
+        </Pressable>
+        {openSection === 'labels' && (
+          <View style={styles.sectionBody}>
+            <View style={styles.labelBlock}>
+              <View style={styles.labelBlockHeader}>
+                <Text style={styles.label}>Categories</Text>
+                <Pressable
+                  style={({ pressed, hovered }) => [
+                    styles.addLinkBtn,
+                    (hovered || pressed) && styles.addLinkBtnPressed,
+                  ]}
+                  onPress={() => setShowCategoryModal(true)}>
+                  <Plus size={14} color={colors.primary} />
+                  <Text style={styles.addLinkText}>Add category</Text>
+                </Pressable>
+              </View>
+              {categories.length === 0 ? (
+                <Text style={styles.description}>No categories yet.</Text>
+              ) : (
+                <View style={styles.manageList}>
+                  {categories.map((cat) => (
+                    <View key={cat.id} style={styles.manageRow}>
+                      <View style={styles.manageRowStart}>
+                        <View style={[styles.manageDot, { backgroundColor: cat.color }]} />
+                        <Text style={styles.manageName} numberOfLines={1}>
+                          {cat.name}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => confirmDeleteCategory(cat.id, cat.name)}
+                        hitSlop={8}
+                        style={({ pressed, hovered }) => [
+                          styles.manageDeleteBtn,
+                          (hovered || pressed) && styles.manageDeleteBtnPressed,
+                        ]}
+                        accessibilityLabel={`Remove category ${cat.name}`}>
+                        <Trash2 size={16} color={colors.red} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View style={styles.labelBlock}>
+              <View style={styles.labelBlockHeader}>
+                <Text style={styles.label}>Tags</Text>
+                <Pressable
+                  style={({ pressed, hovered }) => [
+                    styles.addLinkBtn,
+                    (hovered || pressed) && styles.addLinkBtnPressed,
+                  ]}
+                  onPress={() => setShowTagModal(true)}>
+                  <Plus size={14} color={colors.primary} />
+                  <Text style={styles.addLinkText}>Add tag</Text>
+                </Pressable>
+              </View>
+              {tags.length === 0 ? (
+                <Text style={styles.description}>No tags yet.</Text>
+              ) : (
+                <View style={styles.manageList}>
+                  {tags.map((tag) => (
+                    <View key={tag.id} style={styles.manageRow}>
+                      <View style={styles.manageRowStart}>
+                        <View style={[styles.manageDot, { backgroundColor: tag.color }]} />
+                        <Text style={styles.manageName} numberOfLines={1}>
+                          #{tag.name}
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => confirmDeleteTag(tag.id, tag.name)}
+                        hitSlop={8}
+                        style={({ pressed, hovered }) => [
+                          styles.manageDeleteBtn,
+                          (hovered || pressed) && styles.manageDeleteBtnPressed,
+                        ]}
+                        accessibilityLabel={`Remove tag ${tag.name}`}>
+                        <Trash2 size={16} color={colors.red} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+
       {/* DATA */}
       <View style={styles.section}>
         <Pressable
@@ -382,6 +541,21 @@ export default function SettingsScreen() {
         </View>
       </Pressable>
       </View>
+
+      <CategoryModal
+        visible={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSave={(name, color, icon) => {
+          addCategory({ name, color, icon: icon as CategoryIcon });
+        }}
+      />
+      <TagModal
+        visible={showTagModal}
+        onClose={() => setShowTagModal(false)}
+        onSave={(name, color) => {
+          addTag({ name, color });
+        }}
+      />
     </ScrollView>
   );
 }
@@ -491,6 +665,74 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     },
     segmentTextActive: {
       color: '#fff',
+    },
+    labelBlock: {
+      gap: 8,
+      marginTop: 4,
+    },
+    labelBlockHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    addLinkBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+      borderRadius: 8,
+      ...webInteractive,
+    },
+    addLinkBtnPressed: {
+      backgroundColor: colors.todoHighlight,
+    },
+    addLinkText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    manageList: {
+      gap: 4,
+    },
+    manageRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      backgroundColor: colors.bgSurface,
+      borderWidth: 1,
+      borderColor: colors.borderColor,
+    },
+    manageRowStart: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      minWidth: 0,
+    },
+    manageDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    manageName: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.textPrimary,
+    },
+    manageDeleteBtn: {
+      padding: 6,
+      borderRadius: 8,
+      ...webInteractive,
+    },
+    manageDeleteBtnPressed: {
+      backgroundColor: 'rgba(239, 68, 68, 0.12)',
     },
     secondaryBtn: {
       marginTop: 8,

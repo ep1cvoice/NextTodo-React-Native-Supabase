@@ -9,13 +9,17 @@ interface TagChipPickerProps {
   tags: Tag[];
   selectedIds: number[];
   onChange: (ids: number[]) => void;
+  onAddPress?: () => void;
 }
 
-export default function TagChipPicker({ tags, selectedIds, onChange }: TagChipPickerProps) {
+export default function TagChipPicker({
+  tags,
+  selectedIds,
+  onChange,
+  onAddPress,
+}: TagChipPickerProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-
-  if (tags.length === 0) return null;
 
   const atLimit = selectedIds.length >= MAX_TAGS_PER_TASK;
 
@@ -32,31 +36,43 @@ export default function TagChipPicker({ tags, selectedIds, onChange }: TagChipPi
     <View style={styles.wrapper}>
       <View style={styles.labelRow}>
         <Text style={styles.label}>Tags (optional)</Text>
-        {atLimit && <Text style={styles.limitNote}>Max {MAX_TAGS_PER_TASK} per task</Text>}
-      </View>
-      <View style={styles.chipList}>
-        {tags.map((tag) => {
-          const selected = selectedIds.includes(tag.id);
-          const disabled = !selected && atLimit;
-          return (
-            <Pressable
-              key={tag.id}
-              disabled={disabled}
-              onPress={() => toggle(tag.id)}
-              style={[
-                styles.chip,
-                { borderColor: tag.color },
-                selected && { backgroundColor: `${tag.color}22` },
-                disabled && styles.chipDisabled,
-              ]}>
-              <View style={[styles.dot, { backgroundColor: tag.color }]} />
-              <Text style={[styles.chipText, { color: tag.color }, selected && styles.chipTextSelected]}>
-                # {tag.name}
-              </Text>
+        <View style={styles.labelActions}>
+          {atLimit && <Text style={styles.limitNote}>Max {MAX_TAGS_PER_TASK}</Text>}
+          {onAddPress ? (
+            <Pressable onPress={onAddPress} hitSlop={8} style={styles.addBtn}>
+              <Text style={[styles.addBtnText, { color: colors.primary }]}>+ New</Text>
             </Pressable>
-          );
-        })}
+          ) : null}
+        </View>
       </View>
+      {tags.length === 0 ? (
+        <Text style={styles.emptyHint}>No tags yet — create one</Text>
+      ) : (
+        <View style={styles.chipList}>
+          {tags.map((tag) => {
+            const selected = selectedIds.includes(tag.id);
+            const disabled = !selected && atLimit;
+            return (
+              <Pressable
+                key={tag.id}
+                disabled={disabled}
+                onPress={() => toggle(tag.id)}
+                style={[
+                  styles.chip,
+                  { borderColor: tag.color },
+                  selected && { backgroundColor: `${tag.color}22` },
+                  disabled && styles.chipDisabled,
+                ]}>
+                <View style={[styles.dot, { backgroundColor: tag.color }]} />
+                <Text
+                  style={[styles.chipText, { color: tag.color }, selected && styles.chipTextSelected]}>
+                  # {tag.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 }
@@ -69,11 +85,29 @@ function createStyles(colors: AppColors) {
     labelRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'space-between',
       gap: 8,
     },
     label: {
       color: colors.textSecondary,
       fontSize: 15,
+    },
+    labelActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    addBtn: {
+      paddingVertical: 2,
+      paddingHorizontal: 4,
+    },
+    addBtnText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    emptyHint: {
+      fontSize: 13,
+      color: colors.textMuted,
     },
     limitNote: {
       fontSize: 12,

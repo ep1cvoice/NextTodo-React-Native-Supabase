@@ -12,11 +12,15 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { X, Plus } from 'lucide-react-native';
-import type { Category, Tag } from '@/types';
+import type { Category, CategoryIcon, Tag } from '@/types';
+import CategoryModal from '@/components/tasks/CategoryModal';
 import TagChipPicker from '@/components/tasks/TagChipPicker';
+import TagModal from '@/components/tasks/TagModal';
 import type { AppColors } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
+import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
+import { webInteractive } from '@/utils/pressableWeb';
 
 interface AddTaskModalProps {
   visible: boolean;
@@ -45,6 +49,7 @@ export default function AddTaskModal({
   const { width } = useWindowDimensions();
   const isMobile = width < 480;
   const { colors } = useTheme();
+  const { addCategory, addTag } = useTasks();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [title, setTitle] = useState('');
@@ -52,6 +57,8 @@ export default function AddTaskModal({
   const [categoryId, setCategoryId] = useState<number | null>(defaultCategoryId);
   const [tagIds, setTagIds] = useState<number[]>(defaultTagIds);
   const [inputError, setInputError] = useState('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
 
   const reset = () => {
     setTitle('');
@@ -140,55 +147,64 @@ export default function AddTaskModal({
                 />
               </View>
 
-              {categories.length > 0 && (
-                <View style={styles.inputGroup}>
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
                   <Text style={styles.label}>Category (optional)</Text>
-                  <View style={styles.categoryList}>
-                    <Pressable
-                      onPress={() => setCategoryId(null)}
+                  <Pressable
+                    onPress={() => setShowCategoryModal(true)}
+                    hitSlop={8}
+                    style={styles.newLinkBtn}>
+                    <Text style={styles.newLink}>+ New</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.categoryList}>
+                  <Pressable
+                    onPress={() => setCategoryId(null)}
+                    style={[
+                      styles.categoryChip,
+                      categoryId === null && styles.categoryChipSelected,
+                    ]}>
+                    <Text
                       style={[
-                        styles.categoryChip,
-                        categoryId === null && styles.categoryChipSelected,
+                        styles.categoryChipText,
+                        categoryId === null && styles.categoryChipTextSelected,
                       ]}>
-                      <Text
+                      No category
+                    </Text>
+                  </Pressable>
+                  {categories.map((cat) => {
+                    const selected = categoryId === cat.id;
+                    return (
+                      <Pressable
+                        key={cat.id}
+                        onPress={() => setCategoryId(cat.id)}
                         style={[
-                          styles.categoryChipText,
-                          categoryId === null && styles.categoryChipTextSelected,
+                          styles.categoryChip,
+                          { borderColor: cat.color },
+                          selected && { backgroundColor: `${cat.color}22` },
                         ]}>
-                        No category
-                      </Text>
-                    </Pressable>
-                    {categories.map((cat) => {
-                      const selected = categoryId === cat.id;
-                      return (
-                        <Pressable
-                          key={cat.id}
-                          onPress={() => setCategoryId(cat.id)}
+                        <Text
                           style={[
-                            styles.categoryChip,
-                            { borderColor: cat.color },
-                            selected && { backgroundColor: `${cat.color}22` },
+                            styles.categoryChipText,
+                            { color: cat.color },
+                            selected && styles.categoryChipTextSelected,
                           ]}>
-                          <Text
-                            style={[
-                              styles.categoryChipText,
-                              { color: cat.color },
-                              selected && styles.categoryChipTextSelected,
-                            ]}>
-                            {cat.name}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
+                          {cat.name}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
-              )}
+              </View>
 
-              {tags.length > 0 && (
-                <View style={styles.inputGroup}>
-                  <TagChipPicker tags={tags} selectedIds={tagIds} onChange={setTagIds} />
-                </View>
-              )}
+              <View style={styles.inputGroup}>
+                <TagChipPicker
+                  tags={tags}
+                  selectedIds={tagIds}
+                  onChange={setTagIds}
+                  onAddPress={() => setShowTagModal(true)}
+                />
+              </View>
 
               <View style={styles.footer}>
                 <Pressable
@@ -207,6 +223,23 @@ export default function AddTaskModal({
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+
+      <CategoryModal
+        visible={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSave={(name, color, icon) => {
+          const created = addCategory({ name, color, icon: icon as CategoryIcon });
+          setCategoryId(created.id);
+        }}
+      />
+      <TagModal
+        visible={showTagModal}
+        onClose={() => setShowTagModal(false)}
+        onSave={(name, color) => {
+          const created = addTag({ name, color });
+          setTagIds((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
+        }}
+      />
     </Modal>
   );
 }
@@ -263,10 +296,23 @@ function createStyles(colors: AppColors) {
     inputGroup: {
       gap: 6,
     },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
     label: {
       color: colors.textSecondary,
       fontSize: 15,
       marginBottom: 2,
+    },
+    newLinkBtn: {
+      ...webInteractive,
+    },
+    newLink: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
     },
     input: {
       width: '100%',

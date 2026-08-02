@@ -143,6 +143,8 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
       })()
     : null;
 
+  const hasDescription = !!task.description?.trim();
+
   const toggleExpand = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsExpanded((v) => !v);
@@ -150,6 +152,11 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
   const handleEdit = () => {
     setShowEditModal(true);
+  };
+
+  const handleItemPress = () => {
+    if (!hasDescription) return;
+    toggleExpand();
   };
 
   const openCalendar = () => {
@@ -171,7 +178,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
   return (
     <>
       <Pressable
-        onPress={toggleExpand}
+        onPress={handleItemPress}
         style={({ pressed, hovered }) => [
           styles.todoItem,
           category && !isMobile ? styles.hasCategory : null,
@@ -214,9 +221,11 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               numberOfLines={isExpanded ? undefined : isMobile ? 2 : 1}>
               {task.title}
             </Text>
-            <View style={isExpanded ? styles.rotated : undefined}>
-              <ChevronDown size={16} color={colors.textMuted} />
-            </View>
+            {hasDescription ? (
+              <View style={isExpanded ? styles.rotated : undefined}>
+                <ChevronDown size={16} color={colors.textMuted} />
+              </View>
+            ) : null}
           </View>
 
           <View style={styles.todoIndicators}>
@@ -316,7 +325,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
           </View>
         )}
 
-        {isExpanded && !!task.description && (
+        {isExpanded && hasDescription && (
           <View style={styles.descriptionWrapper}>
             <Text style={[styles.todoDescription, task.done && styles.done]}>
               {task.description}

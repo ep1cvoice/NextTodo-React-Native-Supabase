@@ -1,14 +1,12 @@
 import { createElement } from 'react';
-import { Tabs, useRouter, type Href } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { ListTodo, CheckCircle2, LogOut, Settings, type LucideIcon } from 'lucide-react-native';
-import { Platform, Pressable, Text, useWindowDimensions, View, StyleSheet } from 'react-native';
+import { ListTodo, CheckCircle2, Settings, type LucideIcon } from 'lucide-react-native';
+import { Platform, Text, useWindowDimensions, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BrandLogo from '@/components/ui/BrandLogo';
 import { tokens } from '@/constants/theme';
-import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { webInteractive } from '@/utils/pressableWeb';
 
 const HEADER_ICONS: Record<string, LucideIcon> = {
   active: ListTodo,
@@ -57,17 +55,8 @@ function DesktopConstrainedHeader({
   routeName?: string;
 }) {
   const { colors } = useTheme();
-  const { logout } = useAuth();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= tokens.desktopBreakpoint;
   const HeaderIcon = routeName ? HEADER_ICONS[routeName] : undefined;
-
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/(auth)/login' as Href);
-  };
 
   return (
     <View
@@ -88,21 +77,7 @@ function DesktopConstrainedHeader({
             {title}
           </Text>
         </View>
-        {isDesktop ? (
-          <BrandLogo />
-        ) : (
-          <Pressable
-            onPress={handleLogout}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Log out"
-            style={({ pressed, hovered }) => [
-              styles.logoutBtn,
-              (hovered || pressed) && { backgroundColor: colors.sidebarLogoutHover },
-            ]}>
-            <LogOut size={22} color={colors.sidebarLogoutText} strokeWidth={2.2} />
-          </Pressable>
-        )}
+        <BrandLogo />
       </View>
     </View>
   );
@@ -123,7 +98,6 @@ export default function MainTabsLayout() {
           <DesktopConstrainedHeader title={options.title} routeName={route.name} />
         ),
         headerShown: true,
-        // Desktop: label beside icon. Mobile: label under icon.
         tabBarLabelPosition: isDesktop ? 'beside-icon' : 'below-icon',
         tabBarShowLabel: true,
         tabBarActiveTintColor: colors.primary,
@@ -243,13 +217,5 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 17,
     fontWeight: '700',
-  },
-  logoutBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...webInteractive,
   },
 });
