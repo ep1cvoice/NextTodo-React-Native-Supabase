@@ -12,12 +12,14 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
+  AlarmClock,
   Briefcase,
   Book,
   Calendar,
   Camera,
   Car,
   ChevronDown,
+  ChevronUp,
   CirclePlus,
   Code,
   Coffee,
@@ -43,8 +45,10 @@ import type { LucideIcon } from 'lucide-react-native';
 
 import CalendarModal from '@/components/tasks/CalendarModal';
 import EditTaskModal from '@/components/tasks/EditTaskModal';
+import PomodoroTimer from '@/components/tasks/PomodoroTimer';
 import type { AppColors } from '@/constants/theme';
 import { tokens } from '@/constants/theme';
+import { usePomodoro } from '@/context/PomodoroContext';
 import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
 import type { CategoryIcon, Task } from '@/types';
@@ -107,11 +111,13 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { categories, tags: allTags, updateTask, setTaskScheduled } = useTasks();
+  const { activeTaskId, canStart, startPomo, endPomo } = usePomodoro();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const isPomoActive = activeTaskId === task.id;
 
   const category = task.category;
   const tags = task.tags ?? [];
@@ -152,6 +158,21 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
   const handleEdit = () => {
     setShowEditModal(true);
+  };
+
+  const handleStartPomodoro = () => {
+    if (!canStart || task.done) return;
+    startPomo(task.id);
+  };
+
+  const handleToggleDone = () => {
+    if (isPomoActive) endPomo();
+    onToggle(task.id);
+  };
+
+  const handleDelete = () => {
+    if (isPomoActive) endPomo();
+    onDelete(task.id);
   };
 
   const handleItemPress = () => {
@@ -210,7 +231,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               hovered && task.done && styles.checkboxCheckedHovered,
               pressed && styles.controlPressed,
             ]}
-            onPress={() => onToggle(task.id)}
+            onPress={handleToggleDone}
             hitSlop={6}>
             {task.done ? <Text style={styles.checkmark}>✓</Text> : null}
           </Pressable>
@@ -222,41 +243,60 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               {task.title}
             </Text>
             {hasDescription ? (
-              <View style={isExpanded ? styles.rotated : undefined}>
+              isExpanded ? (
+                <ChevronUp size={16} color={colors.textMuted} />
+              ) : (
                 <ChevronDown size={16} color={colors.textMuted} />
-              </View>
+              )
             ) : null}
           </View>
 
-          <View style={styles.todoIndicators}>
-            {dueDate && (
-              <Pressable
-                onPress={() => {
-                  if (!task.done) openCalendar();
-                }}
-                style={({ pressed, hovered }) => [
-                  styles.todoDate,
-                  isToday && styles.todoDateToday,
-                  isPast && styles.todoDatePast,
-                  hovered && styles.todoDateHovered,
-                  pressed && styles.controlPressed,
-                ]}>
-                <Text
-                  style={[
-                    styles.todoDateText,
-                    isToday && styles.todoDateTextToday,
-                    isPast && styles.todoDateTextPast,
+          {/* Desktop: date stays in the main row */}
+          {!isMobile && (
+            <View style={styles.todoIndicators}>
+              {dueDate && (
+                <Pressable
+                  onPress={() => {
+                    if (!task.done) openCalendar();
+                  }}
+                  style={({ pressed, hovered }) => [
+                    styles.todoDate,
+                    isToday && styles.todoDateToday,
+                    isPast && styles.todoDatePast,
+                    hovered && styles.todoDateHovered,
+                    pressed && styles.controlPressed,
                   ]}>
-                  {dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                </Text>
-              </Pressable>
-            )}
-          </View>
+                  <Text
+                    style={[
+                      styles.todoDateText,
+                      isToday && styles.todoDateTextToday,
+                      isPast && styles.todoDateTextPast,
+                    ]}>
+                    {dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
 
           {!isMobile && (
             <View style={styles.todoActions}>
               {!task.done && (
                 <>
+                  {isPomoActive ? (
+                    <PomodoroTimer taskId={task.id} />
+                  ) : canStart ? (
+                    <Pressable
+                      style={({ pressed, hovered }) => [
+                        styles.todoActionBtn,
+                        (hovered || pressed) && styles.actionPressed,
+                      ]}
+                      onPress={handleStartPomodoro}
+                      hitSlop={6}
+                      accessibilityLabel="Start pomodoro">
+                      <AlarmClock size={18} color={colors.textSecondary} />
+                    </Pressable>
+                  ) : null}
                   <Pressable
                     style={({ pressed, hovered }) => [
                       styles.todoActionBtn,
@@ -282,7 +322,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
                   styles.todoActionBtn,
                   (hovered || pressed) && styles.actionPressed,
                 ]}
-                onPress={() => onDelete(task.id)}
+                onPress={handleDelete}
                 hitSlop={6}>
                 <Trash2 size={18} color={colors.textSecondary} />
               </Pressable>
@@ -291,6 +331,27 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
 
           {isMobile && (
             <View style={styles.mobileRight}>
+              {dueDate ? (
+                <Pressable
+                  onPress={() => {
+                    if (!task.done) openCalendar();
+                  }}
+                  style={[
+                    styles.todoDate,
+                    isToday && styles.todoDateToday,
+                    isPast && styles.todoDatePast,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.todoDateText,
+                      isToday && styles.todoDateTextToday,
+                      isPast && styles.todoDateTextPast,
+                    ]}
+                    numberOfLines={1}>
+                    {dueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                  </Text>
+                </Pressable>
+              ) : null}
               {CategoryIconComp && category && (
                 <View style={{ opacity: 0.5 }}>
                   <CategoryIconComp size={20} strokeWidth={1.5} color={category.color} />
@@ -306,7 +367,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               ) : (
                 <Pressable
                   style={styles.mobilePlus}
-                  onPress={() => onDelete(task.id)}
+                  onPress={handleDelete}
                   hitSlop={8}>
                   <Trash2 size={20} color={colors.textPrimary} />
                 </Pressable>
@@ -314,6 +375,13 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
             </View>
           )}
         </View>
+
+        {/* Mobile: only timer gets a second row (compact) */}
+        {isMobile && isPomoActive ? (
+          <View style={styles.mobileMetaRow}>
+            <PomodoroTimer taskId={task.id} />
+          </View>
+        ) : null}
 
         {tags.length > 0 && (
           <View style={styles.tagChipRow}>
@@ -341,6 +409,18 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
         onRequestClose={() => setShowMobileActions(false)}>
         <Pressable style={styles.mobileOverlay} onPress={() => setShowMobileActions(false)}>
           <Pressable style={styles.mobileActionsModal} onPress={(e) => e.stopPropagation()}>
+            {canStart ? (
+              <Pressable
+                style={styles.mobileActionRow}
+                onPress={() => {
+                  setShowMobileActions(false);
+                  handleStartPomodoro();
+                }}>
+                <AlarmClock size={18} color={colors.textPrimary} />
+                <Text style={styles.mobileActionText}>Pomodoro</Text>
+              </Pressable>
+            ) : null}
+
             <Pressable
               style={styles.mobileActionRow}
               onPress={() => {
@@ -365,7 +445,7 @@ export default function ToDoItem({ task, index = 0, onToggle, onDelete }: ToDoIt
               style={styles.mobileActionRow}
               onPress={() => {
                 setShowMobileActions(false);
-                onDelete(task.id);
+                handleDelete();
               }}>
               <Trash2 size={18} color={colors.textPrimary} />
               <Text style={styles.mobileActionText}>Delete</Text>
@@ -498,6 +578,8 @@ function createStyles(colors: AppColors) {
     },
     titleText: {
       flex: 1,
+      flexShrink: 1,
+      minWidth: 48,
       fontSize: 15,
       fontWeight: '600',
       color: colors.textPrimary,
@@ -507,14 +589,20 @@ function createStyles(colors: AppColors) {
       textDecorationLine: 'line-through',
       color: colors.textMuted,
     },
-    rotated: {
-      transform: [{ rotate: '180deg' }],
-      marginTop: 2,
-    },
     todoIndicators: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
+      flexShrink: 0,
+    },
+    mobileMetaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 8,
+      marginLeft: 32,
+      zIndex: 1,
     },
     todoDate: {
       paddingHorizontal: 8,
@@ -567,7 +655,8 @@ function createStyles(colors: AppColors) {
     mobileRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      flexShrink: 0,
+      gap: 6,
     },
     mobilePlus: {
       width: 32,

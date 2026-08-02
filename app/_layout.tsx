@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '@/context/AuthContext';
+import { PomodoroProvider } from '@/context/PomodoroContext';
 import { TasksProvider } from '@/context/TasksContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
@@ -42,7 +43,9 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeProvider>
           <TasksProvider>
-            <RootNavigation />
+            <PomodoroProvider>
+              <RootNavigation />
+            </PomodoroProvider>
           </TasksProvider>
         </ThemeProvider>
       </AuthProvider>
