@@ -25,6 +25,7 @@ import {
 import CategoryModal from '@/components/tasks/CategoryModal';
 import PomodoroHistory from '@/components/tasks/PomodoroHistory';
 import TagModal from '@/components/tasks/TagModal';
+import ScreenBackground from '@/components/ui/ScreenBackground';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useTasks } from '@/context/TasksContext';
@@ -154,6 +155,7 @@ export default function SettingsScreen() {
   ];
 
   return (
+    <ScreenBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -564,6 +566,7 @@ export default function SettingsScreen() {
         }}
       />
     </ScrollView>
+    </ScreenBackground>
   );
 }
 
@@ -571,7 +574,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bgContent,
+      backgroundColor: 'transparent',
     },
     content: {
       padding: 16,

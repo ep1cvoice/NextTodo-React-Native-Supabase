@@ -1,23 +1,20 @@
 import { View, StyleSheet } from 'react-native';
 import ActiveTasks from '@/components/tasks/ActiveTasks';
+import ScreenBackground from '@/components/ui/ScreenBackground';
 import { tokens } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
 
 export default function ActiveTasksScreen() {
-  const { colors } = useTheme();
-
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgContent }]}>
+    <ScreenBackground style={styles.container}>
       <View style={styles.panel}>
         <ActiveTasks />
       </View>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
   },
   panel: {
