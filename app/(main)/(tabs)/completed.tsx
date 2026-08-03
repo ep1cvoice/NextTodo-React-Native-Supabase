@@ -3,6 +3,7 @@ import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
 import ToDoItem from '@/components/tasks/ToDoItem';
+import ScreenBackground from '@/components/ui/ScreenBackground';
 import { tokens } from '@/constants/theme';
 
 export default function CompletedTasksScreen() {
@@ -10,7 +11,7 @@ export default function CompletedTasksScreen() {
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bgContent }]}>
+    <ScreenBackground style={styles.container}>
       <View style={styles.panel}>
         <FlatList
           data={completedTasks}
@@ -43,13 +44,12 @@ export default function CompletedTasksScreen() {
           )}
         />
       </View>
-    </View>
+    </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
   },
   panel: {

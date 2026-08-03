@@ -23,7 +23,9 @@ import {
   AlertTriangle,
 } from 'lucide-react-native';
 import CategoryModal from '@/components/tasks/CategoryModal';
+import PomodoroHistory from '@/components/tasks/PomodoroHistory';
 import TagModal from '@/components/tasks/TagModal';
+import ScreenBackground from '@/components/ui/ScreenBackground';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useTasks } from '@/context/TasksContext';
@@ -153,6 +155,7 @@ export default function SettingsScreen() {
   ];
 
   return (
+    <ScreenBackground>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -501,7 +504,7 @@ export default function SettingsScreen() {
         {openSection === 'productivity' && (
           <View style={styles.sectionBody}>
             <Text style={styles.label}>Pomodoro</Text>
-            <Text style={styles.description}>Focus duration (used later by timer)</Text>
+            <Text style={styles.description}>Focus duration for new sessions</Text>
             <View style={styles.pomodoroRow}>
               <TextInput
                 value={pomodoroTime}
@@ -525,6 +528,12 @@ export default function SettingsScreen() {
             </View>
             {!!pomodoroMsg && <Text style={styles.successInfo}>{pomodoroMsg}</Text>}
             {!!pomodoroErr && <Text style={styles.errorInfo}>{pomodoroErr}</Text>}
+
+            <View style={styles.historyBlock}>
+              <Text style={styles.label}>Recent sessions</Text>
+              <Text style={styles.description}>Last 5 Pomodoros on this device</Text>
+              <PomodoroHistory />
+            </View>
           </View>
         )}
       </View>
@@ -557,6 +566,7 @@ export default function SettingsScreen() {
         }}
       />
     </ScrollView>
+    </ScreenBackground>
   );
 }
 
@@ -564,7 +574,7 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.bgContent,
+      backgroundColor: 'transparent',
     },
     content: {
       padding: 16,
@@ -796,6 +806,13 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
       alignItems: 'center',
       gap: 10,
       marginTop: 4,
+    },
+    historyBlock: {
+      marginTop: 12,
+      gap: 8,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderColor,
     },
     pomodoroInput: {
       width: 64,

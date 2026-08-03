@@ -49,6 +49,28 @@ export interface Tag {
   color: string;
 }
 
+export interface PomoData {
+  id: number;
+  taskId: number;
+  startedAt: string;
+  endedAt: string | null;
+  /** Target duration in seconds */
+  duration: number;
+  /** Accumulated elapsed time in milliseconds (frozen while paused) */
+  elapsed: number;
+  pausedAt: string | null;
+}
+
+export interface PomoRecord {
+  id: number;
+  taskId: number;
+  taskName: string;
+  startedAt: string;
+  endedAt: string | null;
+  elapsed: number;
+  duration: number;
+}
+
 export const MAX_TAGS_PER_TASK = 10;
 
 export type CategoryIcon =
