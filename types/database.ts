@@ -14,37 +14,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      _TaskToTag: {
-        Row: {
-          A: number
-          B: number
-        }
-        Insert: {
-          A: number
-          B: number
-        }
-        Update: {
-          A?: number
-          B?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "_TaskToTag_A_fkey"
-            columns: ["A"]
-            isOneToOne: false
-            referencedRelation: "Tag"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "_TaskToTag_B_fkey"
-            columns: ["B"]
-            isOneToOne: false
-            referencedRelation: "Tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      Category: {
+      category: {
         Row: {
           color: string
           icon: string
@@ -71,12 +41,12 @@ export type Database = {
             foreignKeyName: "Category_userid_fkey"
             columns: ["userid"]
             isOneToOne: false
-            referencedRelation: "User"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      Pomo: {
+      pomo: {
         Row: {
           duration: number
           elapsed: number
@@ -112,14 +82,14 @@ export type Database = {
             foreignKeyName: "Pomo_taskId_fkey"
             columns: ["taskId"]
             isOneToOne: false
-            referencedRelation: "Tasks"
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Pomo_userId_fkey"
             columns: ["userId"]
             isOneToOne: false
-            referencedRelation: "User"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -154,7 +124,7 @@ export type Database = {
         }
         Relationships: []
       }
-      Tag: {
+      tag: {
         Row: {
           color: string
           id: number
@@ -178,12 +148,12 @@ export type Database = {
             foreignKeyName: "Tag_userId_fkey"
             columns: ["userId"]
             isOneToOne: false
-            referencedRelation: "User"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      Tasks: {
+      tasks: {
         Row: {
           categoryId: number | null
           created: string
@@ -225,47 +195,17 @@ export type Database = {
             foreignKeyName: "Tasks_categoryId_fkey"
             columns: ["categoryId"]
             isOneToOne: false
-            referencedRelation: "Category"
+            referencedRelation: "category"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "Tasks_userId_fkey"
             columns: ["userId"]
             isOneToOne: false
-            referencedRelation: "User"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      User: {
-        Row: {
-          email: string | null
-          id: string
-          isActive: boolean | null
-          lastLogin: string | null
-          password: string | null
-          settings: Json | null
-          username: string
-        }
-        Insert: {
-          email?: string | null
-          id?: string
-          isActive?: boolean | null
-          lastLogin?: string | null
-          password?: string | null
-          settings?: Json | null
-          username: string
-        }
-        Update: {
-          email?: string | null
-          id?: string
-          isActive?: boolean | null
-          lastLogin?: string | null
-          password?: string | null
-          settings?: Json | null
-          username?: string
-        }
-        Relationships: []
       }
     }
     Views: {
