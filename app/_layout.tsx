@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,6 +11,7 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AppSplash from '@/components/ui/AppSplash';
 import { AuthProvider } from '@/context/AuthContext';
 import { PomodoroProvider } from '@/context/PomodoroContext';
 import { TasksProvider } from '@/context/TasksContext';
@@ -57,7 +59,7 @@ function RootNavigation() {
   const { isDark } = useTheme();
 
   return (
-    <>
+    <View style={styles.root}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -65,6 +67,13 @@ function RootNavigation() {
         <Stack.Screen name="(main)" />
         <Stack.Screen name="+not-found" />
       </Stack>
-    </>
+      <AppSplash />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+});
