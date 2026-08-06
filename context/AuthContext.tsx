@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/supabase/client';
-import type { AuthContextValue, User } from '@/types';
+import type { AuthContextValue, ProfileUpdates, User } from '@/types';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -42,6 +42,22 @@ async function fetchProfile(
       view: data.view ?? undefined,
     },
   };
+}
+
+function toProfileRow(updates: ProfileUpdates) {
+  const row: {
+    theme?: string;
+    notification_type?: string;
+    pomodoro_time?: number;
+    view?: string;
+  } = {};
+
+  if (updates.theme !== undefined) row.theme = updates.theme;
+  if (updates.notificationType !== undefined) row.notification_type = updates.notificationType;
+  if (updates.pomodoroTime !== undefined) row.pomodoro_time = updates.pomodoroTime;
+  if (updates.view !== undefined) row.view = updates.view;
+
+  return row;
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -94,8 +110,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const updateProfile = async (updates: ProfileUpdates) => {
+    if (!user) {
+      return { error: 'Not signed in' };
+    }
+
+    const row = toProfileRow(updates);
+    if (Object.keys(row).length === 0) {
+      return { error: null };
+    }
+
+    const { error } = await supabase.from('profiles').update(row).eq('id', user.id);
+    if (error) {
+      return { error: error.message };
+    }
+
+    setUserState((prev) =>
+      prev
+        ? {
+            ...prev,
+            settings: {
+              ...prev.settings,
+              ...updates,
+            },
+          }
+        : prev
+    );
+
+    return { error: null };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, signIn, signUp, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!user, loading, signIn, signUp, logout, updateProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );

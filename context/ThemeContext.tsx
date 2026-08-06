@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/context/AuthContext';
 import {
   resolveColors,
   type AppColors,
@@ -9,9 +10,13 @@ import {
 
 const STORAGE_KEY = 'flowtodo.theme';
 
+function isThemeMode(value: string | undefined): value is ThemeMode {
+  return value === 'light' || value === 'dark' || value === 'auto';
+}
+
 interface ThemeContextValue {
   theme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
+  setTheme: (theme: ThemeMode) => Promise<{ error: string | null }>;
   colors: AppColors;
   isDark: boolean;
   ready: boolean;
@@ -20,6 +25,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const { user, updateProfile } = useAuth();
   const systemScheme = useColorScheme();
   const [theme, setThemeState] = useState<ThemeMode>('auto');
   const [ready, setReady] = useState(false);
@@ -27,17 +33,39 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((stored) => {
-        if (stored === 'light' || stored === 'dark' || stored === 'auto') {
-          setThemeState(stored);
+        if (isThemeMode(stored ?? undefined)) {
+          setThemeState(stored as ThemeMode);
         }
       })
       .finally(() => setReady(true));
   }, []);
 
-  const setTheme = (next: ThemeMode) => {
-    setThemeState(next);
-    AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {});
-  };
+  // Prefer profile theme once auth loads (keeps devices in sync).
+  useEffect(() => {
+    if (!ready) return;
+    const profileTheme = user?.settings?.theme;
+    if (!isThemeMode(profileTheme)) return;
+
+    setThemeState((current) => {
+      if (current === profileTheme) return current;
+      AsyncStorage.setItem(STORAGE_KEY, profileTheme).catch(() => {});
+      return profileTheme;
+    });
+  }, [ready, user?.id, user?.settings?.theme]);
+
+  const setTheme = useCallback(
+    async (next: ThemeMode) => {
+      setThemeState(next);
+      AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {});
+      if (!user) {
+        return { error: null };
+      }
+      const { error } = await updateProfile({ theme: next });
+      if (error) console.warn('Failed to persist theme:', error);
+      return { error };
+    },
+    [user, updateProfile]
+  );
 
   const systemDark = systemScheme === 'dark';
   const colors = useMemo(() => resolveColors(theme, systemDark), [theme, systemDark]);
@@ -46,7 +74,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Always mount children — returning null remounted AuthProvider and wiped the session.
   const value = useMemo(
     () => ({ theme, setTheme, colors, isDark, ready }),
-    [theme, colors, isDark, ready]
+    [theme, setTheme, colors, isDark, ready]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
