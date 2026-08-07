@@ -1,137 +1,45 @@
-# FlowTodo (React Native)
+# FlowTodo
 
-> Port NextTodo na React Native (Expo) + Supabase — jedna baza kodu na iOS, Androida i web.
-> Osobna aplikacja: **FlowTodo** (brand Ocean Flow), inspirowana projektem NextTodo.
+Port [NextTodo](https://github.com/matt400/NextTodo) na **Expo (React Native)** + **Supabase** — iOS, Android i web z jednej bazy kodu.
 
-Oryginał webowy:
-👉 https://github.com/matt400/NextTodo
+## Screenshots
 
-## Cel
+| | |
+|:--|:--|
+| ![Splash](docs/screenshots/01-splash.jpg) | ![Active](docs/screenshots/02-active.jpg) |
+| *Splash* | *Active tasks* |
+| ![Settings](docs/screenshots/03-settings.jpg) | ![Completed](docs/screenshots/04-completed.jpg) |
+| *3 · Settings* | *4 · Completed* |
 
-Umożliwić korzystanie z aplikacji zarówno na komputerze, jak i na telefonie,
-z jednej wspólnej bazy kodu (React Native + `react-native-web` przez Expo).
+## Status
 
-## Brand
-
-- Nazwa: **FlowTodo**
-- Paleta: Ocean Flow (`#0d9488` teal) — tokeny w `constants/theme.ts`
-- Layout auth jak w NextTodo; identyfikacja wizualna osobna
-
-## Zmiany względem oryginału
-
-| Oryginał (web)             | Ten projekt (mobile + web)          |
-|----------------------------|-------------------------------------|
-| React (Vite) + CSS Modules | Expo (React Native) + NativeWind    |
-| react-router-dom           | Expo Router                         |
-| Fastify + Prisma + SQLite  | Supabase (Postgres + Auth + RLS)    |
-| JWT w cookie HTTP-only      | Supabase Auth (tokeny w SecureStore)|
-| Logika Pomodoro na serwerze| Funkcje RPC w Postgres              |
+| Obszar | Stan |
+|--------|------|
+| Auth (login / register / session) | Supabase Auth + `profiles` |
+| Theme + Pomodoro duration | UI gotowe; zapis do `profiles` w osobnym PR / branchu |
+| Tasks / categories / tags | Mock lokalny (UI) |
+| Pomodoro timer + historia | Lokalnie (AsyncStorage / kontekst) |
+| Splash screen | Brand overlay przy starcie sesji |
+| Drag & drop / reorder | Później |
+| Toasty | Później |
 
 ## Stack
 
-- **Framework:** Expo SDK 54 (React Native) + react-native-web
-- **Routing:** Expo Router
-- **Style:** NativeWind (Tailwind) — później
-- **Backend:** Supabase — Postgres, Auth, Row Level Security, RPC — później
-- **Ikony:** lucide-react-native — później
-- **Dźwięk / timer:** expo-av — później
-- **Drag & drop:** react-native-reanimated + gesture-handler — później
+| Warstwa | Wybór |
+|---------|--------|
+| Framework | Expo SDK **54** + Expo Router |
+| UI | React Native + `react-native-web`, StyleSheet |
+| Ikony | `lucide-react-native` |
+| Auth / DB | Supabase (`supabase-js`), sesja w AsyncStorage |
+| Dźwięk | `expo-av` (alarm Pomodoro) |
+| Animacje | RN `Animated` / Reanimated (DnD później) |
 
-> **Uwaga iOS / Expo Go:** W App Store Expo Go jest obecnie na **SDK 54** (nowsze SDK czekają na akceptację Apple). Dlatego ten projekt celowo używa Expo SDK 54, żeby działał z Expo Go na iPhonie.
-
-## Uruchomienie
-
-Działa na **Windows**, **Linux** i **macOS**. Telefon: **Expo Go** (iOS / Android). Nie potrzebujesz Xcode ani Android Studio.
-
-### Wymagania
-
-- Node.js 18+ (`node -v`)
-- npm
-- Telefon i komputer w **tej samej sieci Wi‑Fi**
-
-### 1. Instalacja (raz)
+## Run
 
 ```bash
-git clone <url-tego-repo>
-cd NextTodo-React-Native-Supabase
 npm install
-cp .env .env.local
-```
-
-Zmień wartości w `.env.local`. Plik `.env.local` jest zawsze ładowany jako pierwszy.
-
-### 2. Inicjalizacja supabase
-Należy wygenerować access_token, będzie on przechowywany lokalnie na danej maszynie.
-Nie może pod żadnym pozorem trafić do pliku `.env`.
-```bash
-npx supabase login
-```
-
-Jeżeli typy nie są wygenerowane:
-```bash
-npx supabase link --project-ref project_id
-npx supabase gen types typescript --linked > types/database.ts
-```
-Ref `project_id` można znaleźć w ustawieniach projektu.
-
-### 2. Start serwera deweloperskiego
-
-Używaj lokalnego Expo z projektu (SDK 54), **nie** gołego `npx expo` — to potrafi ściągnąć nowsze Expo 57 i zepsuć kompatybilność z Expo Go:
-
-```bash
+cp .env.example .env   # uzupełnij klucze lokalnie
 npm start -- -c
 ```
 
-(`-c` czyści cache Metro — warto po zmianie SDK / po problemach)
-
-W terminalu pojawi się QR kod oraz skróty:
-
-| Klawisz | Co robi |
-|---------|---------|
-| `w` | otwiera wersję **web** w przeglądarce |
-| `a` | próbuje otworzyć na Androidzie (emulator / podłączony telefon) |
-| `r` | reload aplikacji |
-| `Ctrl+C` | zatrzymuje serwer |
-
-### 3. Telefon — Expo Go
-
-#### iPhone (iOS)
-
-1. Zainstaluj **Expo Go** z App Store (obecnie SDK **54.x** — to OK, projekt jest na 54).
-2. Zeskanuj QR z terminala aparatem iPhone’a albo w Expo Go → Scan QR.
-3. Aplikacja otworzy się w Expo Go.
-
-#### Android
-
-1. Zainstaluj **Expo Go** z Google Play.
-2. Otwórz Expo Go → Scan QR code (albo zeskanuj QR z terminala).
-3. Aplikacja otworzy się w Expo Go.
-
-> **Tip Android:** w niektórych telefonach skaner systemowy nie otwiera od razu Expo Go — lepiej skanować **z poziomu aplikacji Expo Go**.
-
-### 4. Web (komputer)
-
-Przy działającym `npm start -- -c` naciśnij `w`, albo:
-
-```bash
-npm run web
-```
-
-Otworzy się w przeglądarce (np. `http://localhost:8081`).
-
-### Problemy z połączeniem telefon ↔ komputer
-
-Jeśli QR nie łączy się (firewall, inna sieć, VPN):
-
-```bash
-npm start -- -c --tunnel
-```
-
-Wolniejsze, ale działa przez tunel Expo (nie wymaga tej samej sieci lokalnej).
-
-Na Windows czasem pomaga odblokowanie Node.js w firewallu przy pierwszym uruchomieniu.
-
-### Ważne info !!!
-
-- Trzymamy **Expo SDK 54**, bo Expo Go w App Store / Play Market na iOS jest aktualnie na 54 (nowsze SDK czekają na akceptację Apple).
-- Nie aktualizujcie samodzielnie `expo` do 55/56/57 bez uzgodnienia — zepsuje to Expo Go na iPhonie.
+`w` = web · Expo Go = QR z terminala · SDK celowo **54** pod aktualne Expo Go.

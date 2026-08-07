@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, type ReactNode } from 'react';
 import { Tabs } from 'expo-router';
 import { BottomTabBar, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { ListTodo, CheckCircle2, Settings, type LucideIcon } from 'lucide-react-native';
@@ -50,13 +50,16 @@ function DesktopConstrainedTabBar(props: BottomTabBarProps) {
 function DesktopConstrainedHeader({
   title,
   routeName,
+  headerRight,
 }: {
   title?: string;
   routeName?: string;
+  headerRight?: (props: { canGoBack: boolean }) => ReactNode;
 }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const HeaderIcon = routeName ? HEADER_ICONS[routeName] : undefined;
+  const right = headerRight?.({ canGoBack: false });
 
   return (
     <View
@@ -77,7 +80,7 @@ function DesktopConstrainedHeader({
             {title}
           </Text>
         </View>
-        <BrandLogo />
+        {right ? <View style={styles.headerRight}>{right}</View> : <BrandLogo />}
       </View>
     </View>
   );
@@ -95,7 +98,11 @@ export default function MainTabsLayout() {
       }
       screenOptions={{
         header: ({ options, route }) => (
-          <DesktopConstrainedHeader title={options.title} routeName={route.name} />
+          <DesktopConstrainedHeader
+            title={options.title}
+            routeName={route.name}
+            headerRight={options.headerRight}
+          />
         ),
         headerShown: true,
         tabBarLabelPosition: isDesktop ? 'beside-icon' : 'below-icon',
@@ -156,7 +163,7 @@ export default function MainTabsLayout() {
       <Tabs.Screen
         name="completed"
         options={{
-          title: 'Completed Tasks',
+          title: 'Completed',
           tabBarLabel: 'Completed',
           tabBarIcon: ({ color, size }) => (
             <CheckCircle2 size={size} color={color} strokeWidth={2} />
@@ -207,15 +214,24 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerTitleRow: {
-    flex: 1,
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     minWidth: 0,
+    maxWidth: '48%',
   },
   headerTitle: {
     flexShrink: 1,
     fontSize: 17,
     fontWeight: '700',
+  },
+  headerRight: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    minWidth: 0,
   },
 });
