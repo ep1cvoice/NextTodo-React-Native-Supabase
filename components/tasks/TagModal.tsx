@@ -22,7 +22,7 @@ import { webInteractive } from '@/utils/pressableWeb';
 interface TagModalProps {
   visible: boolean;
   tag?: Tag | null;
-  onSave: (name: string, color: string) => void;
+  onSave: (name: string, color: string) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -54,14 +54,19 @@ export default function TagModal({ visible, tag = null, onSave, onClose }: TagMo
     return '';
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const error = validate(name);
     if (error) {
       setNameError(error);
       return;
     }
-    onSave(name.trim(), selectedColor);
-    onClose();
+    try {
+      await onSave(name.trim(), selectedColor);
+      onClose();
+    } catch (err) {
+      console.warn('Failed to save tag:', err);
+      setNameError('Could not save tag. Try again.');
+    }
   };
 
   return (

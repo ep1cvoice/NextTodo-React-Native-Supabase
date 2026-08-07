@@ -69,7 +69,7 @@ const ICON_MAP: Record<CategoryIcon, LucideIcon> = {
 interface CategoryModalProps {
   visible: boolean;
   category?: Category | null;
-  onSave: (name: string, color: string, icon: CategoryIcon) => void;
+  onSave: (name: string, color: string, icon: CategoryIcon) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -106,14 +106,19 @@ export default function CategoryModal({
     return '';
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const error = validate(name);
     if (error) {
       setNameError(error);
       return;
     }
-    onSave(name.trim(), selectedColor, selectedIcon);
-    onClose();
+    try {
+      await onSave(name.trim(), selectedColor, selectedIcon);
+      onClose();
+    } catch (err) {
+      console.warn('Failed to save category:', err);
+      setNameError('Could not save category. Try again.');
+    }
   };
 
   return (

@@ -32,7 +32,7 @@ export interface EditTaskUpdates {
 interface EditTaskModalProps {
   visible: boolean;
   task: Task;
-  onUpdate: (id: number, updates: EditTaskUpdates) => void;
+  onUpdate: (id: number, updates: EditTaskUpdates) => void | Promise<void>;
   onClose: () => void;
   categories: Category[];
   tags: Tag[];
@@ -84,15 +84,20 @@ export default function EditTaskModal({
     if (inputError) setInputError(validateTitle(value));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const error = validateTitle(title);
     if (error) {
       setInputError(error);
       return;
     }
 
-    onUpdate(task.id, { title, description, categoryId, tagIds });
-    onClose();
+    try {
+      await onUpdate(task.id, { title, description, categoryId, tagIds });
+      onClose();
+    } catch (err) {
+      console.warn('Failed to update task:', err);
+      setInputError('Could not save task. Try again.');
+    }
   };
 
   return (
@@ -222,16 +227,16 @@ export default function EditTaskModal({
       <CategoryModal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        onSave={(name, color, icon) => {
-          const created = addCategory({ name, color, icon: icon as CategoryIcon });
+        onSave={async (name, color, icon) => {
+          const created = await addCategory({ name, color, icon: icon as CategoryIcon });
           setCategoryId(created.id);
         }}
       />
       <TagModal
         visible={showTagModal}
         onClose={() => setShowTagModal(false)}
-        onSave={(name, color) => {
-          const created = addTag({ name, color });
+        onSave={async (name, color) => {
+          const created = await addTag({ name, color });
           setTagIds((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
         }}
       />

@@ -1,6 +1,15 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { mapCategory, mapTag, mapTask, type TaskQueryRow } from '@/lib/taskMappers';
+import { supabase } from '@/supabase/client';
 import type { Category, CategoryIcon, Tag, Task } from '@/types';
-import { MOCK_CATEGORIES, MOCK_TAGS, MOCK_TASKS } from '@/data/mockTasks';
 
 export interface AddTaskInput {
   title: string;
@@ -28,25 +37,43 @@ interface TasksContextValue {
   completedTasks: Task[];
   categories: Category[];
   tags: Tag[];
-  addTask: (input: AddTaskInput) => void;
-  updateTask: (id: number, input: UpdateTaskInput) => void;
-  setTaskScheduled: (id: number, scheduled: string | null) => void;
-  addCategory: (input: AddCategoryInput) => Category;
-  addTag: (input: AddTagInput) => Tag;
-  deleteCategory: (id: number) => void;
-  deleteTag: (id: number) => void;
-  toggleTask: (id: number) => void;
-  deleteTask: (id: number) => void;
-  deleteAllActive: () => void;
-  deleteAllCompleted: () => void;
+  loading: boolean;
+  addTask: (input: AddTaskInput) => Promise<void>;
+  updateTask: (id: number, input: UpdateTaskInput) => Promise<void>;
+  setTaskScheduled: (id: number, scheduled: string | null) => Promise<void>;
+  addCategory: (input: AddCategoryInput) => Promise<Category>;
+  addTag: (input: AddTagInput) => Promise<Tag>;
+  deleteCategory: (id: number) => Promise<void>;
+  deleteTag: (id: number) => Promise<void>;
+  toggleTask: (id: number) => Promise<void>;
+  deleteTask: (id: number) => Promise<void>;
+  deleteAllActive: () => Promise<void>;
+  deleteAllCompleted: () => Promise<void>;
 }
+
+const TASK_SELECT = `
+  id,
+  user_id,
+  title,
+  description,
+  done,
+  scheduled,
+  sort_order,
+  category_id,
+  created_at,
+  updated_at,
+  categories ( id, user_id, name, color, icon, created_at ),
+  task_tags ( tags ( id, user_id, name, color, created_at ) )
+`;
 
 const TasksContext = createContext<TasksContextValue | null>(null);
 
 export function TasksProvider({ children }: { children: React.ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
-  const [categories, setCategories] = useState<Category[]>(MOCK_CATEGORIES);
-  const [tags, setTags] = useState<Tag[]>(MOCK_TAGS);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const activeTasks = useMemo(
     () => tasks.filter((t) => !t.done).sort((a, b) => a.sortOrder - b.sortOrder),
@@ -58,87 +85,183 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     [tasks]
   );
 
-  const addTask = ({ title, description, categoryId, tagIds }: AddTaskInput) => {
-    const category = categories.find((c) => c.id === categoryId) ?? null;
-    const selectedTags = tags.filter((t) => tagIds.includes(t.id));
-    const nextId = tasks.reduce((max, t) => Math.max(max, t.id), 0) + 1;
+  const refresh = useCallback(async (userId: string) => {
+    const [categoriesRes, tagsRes, tasksRes] = await Promise.all([
+      supabase.from('categories').select('*').eq('user_id', userId).order('name'),
+      supabase.from('tags').select('*').eq('user_id', userId).order('name'),
+      supabase
+        .from('tasks')
+        .select(TASK_SELECT)
+        .eq('user_id', userId)
+        .order('sort_order', { ascending: true }),
+    ]);
+
+    if (categoriesRes.error) throw categoriesRes.error;
+    if (tagsRes.error) throw tagsRes.error;
+    if (tasksRes.error) throw tasksRes.error;
+
+    setCategories((categoriesRes.data ?? []).map(mapCategory));
+    setTags((tagsRes.data ?? []).map(mapTag));
+    setTasks(((tasksRes.data ?? []) as TaskQueryRow[]).map(mapTask));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!user) {
+      setTasks([]);
+      setCategories([]);
+      setTags([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    refresh(user.id)
+      .catch((err) => {
+        console.warn('Failed to load tasks domain:', err?.message ?? err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, refresh]);
+
+  const requireUserId = () => {
+    if (!user) throw new Error('Not signed in');
+    return user.id;
+  };
+
+  const addTask = async ({ title, description, categoryId, tagIds }: AddTaskInput) => {
+    const userId = requireUserId();
     const minSort = activeTasks.length
       ? Math.min(...activeTasks.map((t) => t.sortOrder)) - 1
       : 0;
 
-    const newTask: Task = {
-      id: nextId,
-      title: title.trim(),
-      description: description.trim(),
-      done: false,
-      scheduled: null,
-      created: new Date().toISOString(),
-      categoryId,
-      category,
-      sortOrder: minSort,
-      tags: selectedTags,
-    };
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: userId,
+        title: title.trim(),
+        description: description.trim(),
+        category_id: categoryId,
+        sort_order: minSort,
+        done: false,
+      })
+      .select('id')
+      .single();
 
-    setTasks((prev) => [newTask, ...prev]);
+    if (error) throw error;
+
+    if (tagIds.length > 0) {
+      const { error: tagError } = await supabase.from('task_tags').insert(
+        tagIds.map((tag_id) => ({ task_id: data.id, tag_id }))
+      );
+      if (tagError) throw tagError;
+    }
+
+    await refresh(userId);
   };
 
-  const updateTask = (id: number, { title, description, categoryId, tagIds }: UpdateTaskInput) => {
-    const category = categories.find((c) => c.id === categoryId) ?? null;
-    const selectedTags = tags.filter((t) => tagIds.includes(t.id));
+  const updateTask = async (
+    id: number,
+    { title, description, categoryId, tagIds }: UpdateTaskInput
+  ) => {
+    const userId = requireUserId();
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              title: title.trim(),
-              description: description.trim(),
-              categoryId,
-              category,
-              tags: selectedTags,
-            }
-          : t
-      )
-    );
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: title.trim(),
+        description: description.trim(),
+        category_id: categoryId,
+      })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    const { error: clearError } = await supabase.from('task_tags').delete().eq('task_id', id);
+    if (clearError) throw clearError;
+
+    if (tagIds.length > 0) {
+      const { error: tagError } = await supabase
+        .from('task_tags')
+        .insert(tagIds.map((tag_id) => ({ task_id: id, tag_id })));
+      if (tagError) throw tagError;
+    }
+
+    await refresh(userId);
   };
 
-  const setTaskScheduled = (id: number, scheduled: string | null) => {
+  const setTaskScheduled = async (id: number, scheduled: string | null) => {
+    const userId = requireUserId();
+    const { error } = await supabase
+      .from('tasks')
+      .update({ scheduled })
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) throw error;
+
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, scheduled } : t)));
   };
 
-  const addCategory = ({ name, color, icon }: AddCategoryInput): Category => {
-    const nextId = categories.reduce((max, c) => Math.max(max, c.id), 0) + 1;
-    const category: Category = {
-      id: nextId,
-      name: name.trim(),
-      color,
-      icon,
-    };
+  const addCategory = async ({ name, color, icon }: AddCategoryInput): Promise<Category> => {
+    const userId = requireUserId();
+    const { data, error } = await supabase
+      .from('categories')
+      .insert({
+        user_id: userId,
+        name: name.trim(),
+        color,
+        icon: String(icon),
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    const category = mapCategory(data);
     setCategories((prev) => [...prev, category]);
     return category;
   };
 
-  const addTag = ({ name, color }: AddTagInput): Tag => {
-    const nextId = tags.reduce((max, t) => Math.max(max, t.id), 0) + 1;
-    const tag: Tag = {
-      id: nextId,
-      name: name.trim(),
-      color,
-    };
+  const addTag = async ({ name, color }: AddTagInput): Promise<Tag> => {
+    const userId = requireUserId();
+    const { data, error } = await supabase
+      .from('tags')
+      .insert({
+        user_id: userId,
+        name: name.trim(),
+        color,
+      })
+      .select('*')
+      .single();
+
+    if (error) throw error;
+    const tag = mapTag(data);
     setTags((prev) => [...prev, tag]);
     return tag;
   };
 
-  const deleteCategory = (id: number) => {
+  const deleteCategory = async (id: number) => {
+    const userId = requireUserId();
+    const { error } = await supabase.from('categories').delete().eq('id', id).eq('user_id', userId);
+    if (error) throw error;
+
     setCategories((prev) => prev.filter((c) => c.id !== id));
     setTasks((prev) =>
-      prev.map((t) =>
-        t.categoryId === id ? { ...t, categoryId: null, category: null } : t
-      )
+      prev.map((t) => (t.categoryId === id ? { ...t, categoryId: null, category: null } : t))
     );
   };
 
-  const deleteTag = (id: number) => {
+  const deleteTag = async (id: number) => {
+    const userId = requireUserId();
+    const { error } = await supabase.from('tags').delete().eq('id', id).eq('user_id', userId);
+    if (error) throw error;
+
     setTags((prev) => prev.filter((t) => t.id !== id));
     setTasks((prev) =>
       prev.map((t) => ({
@@ -148,19 +271,52 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const toggleTask = (id: number) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  const toggleTask = async (id: number) => {
+    const userId = requireUserId();
+    const current = tasks.find((t) => t.id === id);
+    if (!current) return;
+
+    const nextDone = !current.done;
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: nextDone } : t)));
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({ done: nextDone })
+      .eq('id', id)
+      .eq('user_id', userId);
+
+    if (error) {
+      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: current.done } : t)));
+      throw error;
+    }
   };
 
-  const deleteTask = (id: number) => {
+  const deleteTask = async (id: number) => {
+    const userId = requireUserId();
+    const { error } = await supabase.from('tasks').delete().eq('id', id).eq('user_id', userId);
+    if (error) throw error;
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const deleteAllActive = () => {
+  const deleteAllActive = async () => {
+    const userId = requireUserId();
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('user_id', userId)
+      .eq('done', false);
+    if (error) throw error;
     setTasks((prev) => prev.filter((t) => t.done));
   };
 
-  const deleteAllCompleted = () => {
+  const deleteAllCompleted = async () => {
+    const userId = requireUserId();
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('user_id', userId)
+      .eq('done', true);
+    if (error) throw error;
     setTasks((prev) => prev.filter((t) => !t.done));
   };
 
@@ -172,6 +328,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
         completedTasks,
         categories,
         tags,
+        loading,
         addTask,
         updateTask,
         setTaskScheduled,
