@@ -13,6 +13,8 @@ interface TaskFilterBarProps {
   selectedTagIds: number[];
   onOpen: () => void;
   onClear: () => void;
+  /** Compact layout for the top navigation header */
+  variant?: 'inline' | 'header';
 }
 
 export default function TaskFilterBar({
@@ -22,9 +24,10 @@ export default function TaskFilterBar({
   selectedTagIds,
   onOpen,
   onClear,
+  variant = 'inline',
 }: TaskFilterBarProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, variant), [colors, variant]);
 
   const activeCategories = categories.filter((c) => selectedCategoryIds.includes(c.id));
   const activeTags = tags.filter((t) => selectedTagIds.includes(t.id));
@@ -111,22 +114,26 @@ export default function TaskFilterBar({
   );
 }
 
-function createStyles(colors: AppColors) {
+function createStyles(colors: AppColors, variant: 'inline' | 'header') {
+  const isHeader = variant === 'header';
+
   return StyleSheet.create({
     bar: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      gap: 8,
-      marginBottom: 10,
-      minHeight: 36,
+      gap: 6,
+      marginBottom: isHeader ? 0 : 10,
+      minHeight: isHeader ? undefined : 36,
+      flexShrink: 1,
+      maxWidth: '100%',
     },
     filterBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      paddingVertical: isHeader ? 7 : 8,
+      paddingHorizontal: isHeader ? 10 : 12,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: colors.borderColor,
@@ -138,7 +145,7 @@ function createStyles(colors: AppColors) {
       borderColor: colors.primary,
     },
     filterBtnText: {
-      fontSize: 14,
+      fontSize: isHeader ? 13 : 14,
       fontWeight: '600',
       color: colors.textSecondary,
     },
@@ -151,13 +158,13 @@ function createStyles(colors: AppColors) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      gap: 8,
+      gap: 6,
       paddingLeft: 4,
     },
     summaryOpen: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 6,
       paddingVertical: 4,
       paddingHorizontal: 4,
       borderRadius: 10,
@@ -169,15 +176,15 @@ function createStyles(colors: AppColors) {
     summaryChip: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      paddingVertical: 5,
-      paddingHorizontal: 10,
+      gap: 5,
+      paddingVertical: isHeader ? 4 : 5,
+      paddingHorizontal: isHeader ? 8 : 10,
       borderRadius: 999,
       borderWidth: 1,
-      maxWidth: 160,
+      maxWidth: isHeader ? 110 : 160,
     },
     summaryChipText: {
-      fontSize: 13,
+      fontSize: isHeader ? 12 : 13,
       fontWeight: '600',
     },
     dot: {

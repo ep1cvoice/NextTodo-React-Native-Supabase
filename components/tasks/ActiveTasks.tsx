@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { useNavigation } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -15,6 +16,7 @@ function toggleId(prev: number[], id: number): number[] {
 }
 
 export default function ActiveTasks() {
+  const navigation = useNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { activeTasks, categories, tags, addTask, toggleTask, deleteTask } = useTasks();
@@ -49,10 +51,36 @@ export default function ActiveTasks() {
     });
   }, [activeTasks, validCategoryIds, validTagIds]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSelectedCategoryIds([]);
     setSelectedTagIds([]);
-  };
+  }, []);
+
+  const openFilterSheet = useCallback(() => setShowFilterSheet(true), []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TaskFilterBar
+          variant="header"
+          categories={categories}
+          tags={tags}
+          selectedCategoryIds={validCategoryIds}
+          selectedTagIds={validTagIds}
+          onOpen={openFilterSheet}
+          onClear={clearFilters}
+        />
+      ),
+    });
+  }, [
+    navigation,
+    categories,
+    tags,
+    validCategoryIds,
+    validTagIds,
+    openFilterSheet,
+    clearFilters,
+  ]);
 
   const emptyCopy = (() => {
     if (!hasFilters) {
@@ -81,15 +109,6 @@ export default function ActiveTasks() {
 
   return (
     <View style={styles.container}>
-      <TaskFilterBar
-        categories={categories}
-        tags={tags}
-        selectedCategoryIds={validCategoryIds}
-        selectedTagIds={validTagIds}
-        onOpen={() => setShowFilterSheet(true)}
-        onClear={clearFilters}
-      />
-
       <FlatList
         style={styles.tasksList}
         contentContainerStyle={[
