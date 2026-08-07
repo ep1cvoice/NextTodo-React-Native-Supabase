@@ -1,11 +1,12 @@
-import type { Dispatch, SetStateAction } from 'react';
-
 export interface UserSettings {
   theme?: string;
   notificationType?: string;
   pomodoroTime?: number;
   view?: string;
 }
+
+/** Partial settings payload for `profiles` updates. */
+export type ProfileUpdates = Partial<UserSettings>;
 
 export interface User {
   id: string; // uuid
@@ -21,6 +22,7 @@ export interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
   logout: () => Promise<void>;
+  updateProfile: (updates: ProfileUpdates) => Promise<{ error: string | null }>;
 }
 
 export interface Task {

@@ -41,7 +41,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 type SectionKey = 'profile' | 'preferences' | 'labels' | 'data' | 'productivity';
 
 export default function SettingsScreen() {
-  const { user, setUser, logout } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const { theme, setTheme, colors } = useTheme();
   const {
     activeTasks,
@@ -64,6 +64,9 @@ export default function SettingsScreen() {
   );
   const [pomodoroMsg, setPomodoroMsg] = useState('');
   const [pomodoroErr, setPomodoroErr] = useState('');
+  const [pomodoroSaving, setPomodoroSaving] = useState(false);
+  const [themeMsg, setThemeMsg] = useState('');
+  const [themeErr, setThemeErr] = useState('');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showTagModal, setShowTagModal] = useState(false);
 
@@ -77,7 +80,7 @@ export default function SettingsScreen() {
     router.replace('/(auth)/login' as Href);
   };
 
-  const handlePomodoroSave = () => {
+  const handlePomodoroSave = async () => {
     setPomodoroMsg('');
     setPomodoroErr('');
     const value = Number(pomodoroTime);
@@ -85,15 +88,28 @@ export default function SettingsScreen() {
       setPomodoroErr('Time must be between 1 and 60 minutes');
       return;
     }
-    setUser((prev) =>
-      prev
-        ? {
-            ...prev,
-            settings: { ...prev.settings, pomodoroTime: value },
-          }
-        : prev
-    );
-    setPomodoroMsg('Pomodoro time updated (local).');
+
+    setPomodoroSaving(true);
+    const { error } = await updateProfile({ pomodoroTime: value });
+    setPomodoroSaving(false);
+
+    if (error) {
+      setPomodoroErr(error);
+      return;
+    }
+    setPomodoroMsg('Pomodoro time saved.');
+  };
+
+  const handleThemeChange = async (next: ThemeMode) => {
+    if (next === theme) return;
+    setThemeMsg('');
+    setThemeErr('');
+    const { error } = await setTheme(next);
+    if (error) {
+      setThemeErr(error);
+      return;
+    }
+    setThemeMsg('Theme saved.');
   };
 
   const confirmDeleteAllActive = () => {
@@ -272,7 +288,7 @@ export default function SettingsScreen() {
                 return (
                   <Pressable
                     key={opt.value}
-                    onPress={() => setTheme(opt.value)}
+                    onPress={() => handleThemeChange(opt.value)}
                     style={({ hovered, pressed }) => [
                       styles.segmentBtn,
                       active && styles.segmentBtnActive,
@@ -287,6 +303,8 @@ export default function SettingsScreen() {
                 );
               })}
             </View>
+            {!!themeMsg && <Text style={styles.successInfo}>{themeMsg}</Text>}
+            {!!themeErr && <Text style={styles.errorInfo}>{themeErr}</Text>}
           </View>
         )}
       </View>
@@ -521,9 +539,13 @@ export default function SettingsScreen() {
                 style={({ pressed, hovered }) => [
                   styles.primaryBtn,
                   (hovered || pressed) && styles.primaryBtnPressed,
+                  pomodoroSaving && styles.primaryBtnDisabled,
                 ]}
+                disabled={pomodoroSaving}
                 onPress={handlePomodoroSave}>
-                <Text style={styles.primaryBtnText}>Set Time</Text>
+                <Text style={styles.primaryBtnText}>
+                  {pomodoroSaving ? 'Saving…' : 'Set Time'}
+                </Text>
               </Pressable>
             </View>
             {!!pomodoroMsg && <Text style={styles.successInfo}>{pomodoroMsg}</Text>}
@@ -835,6 +857,9 @@ function createStyles(colors: ReturnType<typeof useTheme>['colors']) {
     },
     primaryBtnPressed: {
       backgroundColor: colors.primaryHover,
+    },
+    primaryBtnDisabled: {
+      opacity: 0.6,
     },
     primaryBtnText: {
       color: '#fff',
