@@ -577,14 +577,14 @@ export default function SettingsScreen() {
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
         onSave={(name, color, icon) => {
-          addCategory({ name, color, icon: icon as CategoryIcon });
+          void addCategory({ name, color, icon: icon as CategoryIcon });
         }}
       />
       <TagModal
         visible={showTagModal}
         onClose={() => setShowTagModal(false)}
         onSave={(name, color) => {
-          addTag({ name, color });
+          void addTag({ name, color });
         }}
       />
     </ScrollView>

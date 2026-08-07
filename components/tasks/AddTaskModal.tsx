@@ -29,7 +29,7 @@ interface AddTaskModalProps {
     description: string;
     categoryId: number | null;
     tagIds: number[];
-  }) => void;
+  }) => void | Promise<void>;
   onClose: () => void;
   categories: Category[];
   tags: Tag[];
@@ -88,16 +88,21 @@ export default function AddTaskModal({
     if (inputError) setInputError(validateTitle(value));
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const error = validateTitle(title);
     if (error) {
       setInputError(error);
       return;
     }
 
-    onAdd({ title, description, categoryId, tagIds });
-    reset();
-    onClose();
+    try {
+      await onAdd({ title, description, categoryId, tagIds });
+      reset();
+      onClose();
+    } catch (err) {
+      console.warn('Failed to add task:', err);
+      setInputError('Could not save task. Try again.');
+    }
   };
 
   return (
@@ -227,16 +232,16 @@ export default function AddTaskModal({
       <CategoryModal
         visible={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
-        onSave={(name, color, icon) => {
-          const created = addCategory({ name, color, icon: icon as CategoryIcon });
+        onSave={async (name, color, icon) => {
+          const created = await addCategory({ name, color, icon: icon as CategoryIcon });
           setCategoryId(created.id);
         }}
       />
       <TagModal
         visible={showTagModal}
         onClose={() => setShowTagModal(false)}
-        onSave={(name, color) => {
-          const created = addTag({ name, color });
+        onSave={async (name, color) => {
+          const created = await addTag({ name, color });
           setTagIds((prev) => (prev.includes(created.id) ? prev : [...prev, created.id]));
         }}
       />

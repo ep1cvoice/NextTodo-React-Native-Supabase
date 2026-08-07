@@ -14,80 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
-      category: {
+      categories: {
         Row: {
+          id: number
+          user_id: string
+          name: string
           color: string
           icon: string
-          id: number
-          name: string
-          userid: string
+          created_at: string
         }
         Insert: {
-          color: string
-          icon: string
           id?: number
+          user_id: string
           name: string
-          userid: string
-        }
-        Update: {
           color?: string
           icon?: string
-          id?: number
-          name?: string
-          userid?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "Category_userid_fkey"
-            columns: ["userid"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pomo: {
-        Row: {
-          duration: number
-          elapsed: number
-          endedAt: string | null
-          id: string
-          pausedAt: string | null
-          startedAt: string
-          taskId: number
-          userId: string
-        }
-        Insert: {
-          duration: number
-          elapsed?: number
-          endedAt?: string | null
-          id: string
-          pausedAt?: string | null
-          startedAt?: string
-          taskId: number
-          userId: string
+          created_at?: string
         }
         Update: {
-          duration?: number
-          elapsed?: number
-          endedAt?: string | null
-          id?: string
-          pausedAt?: string | null
-          startedAt?: string
-          taskId?: number
-          userId?: string
+          id?: number
+          user_id?: string
+          name?: string
+          color?: string
+          icon?: string
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "Pomo_taskId_fkey"
-            columns: ["taskId"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "Pomo_userId_fkey"
-            columns: ["userId"]
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -124,85 +79,118 @@ export type Database = {
         }
         Relationships: []
       }
-      tag: {
+      tags: {
         Row: {
-          color: string
           id: number
+          user_id: string
           name: string
-          userId: string
+          color: string
+          created_at: string
         }
         Insert: {
-          color?: string
           id?: number
+          user_id: string
           name: string
-          userId: string
+          color?: string
+          created_at?: string
         }
         Update: {
-          color?: string
           id?: number
+          user_id?: string
           name?: string
-          userId?: string
+          color?: string
+          created_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "Tag_userId_fkey"
-            columns: ["userId"]
+            foreignKeyName: "tags_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      tasks: {
+      task_tags: {
         Row: {
-          categoryId: number | null
-          created: string
-          id: number
-          isFinished: boolean
-          modified: string
-          scheduled: string | null
-          sortOrder: number
-          taskDesc: string
-          taskName: string
-          userId: string
+          task_id: number
+          tag_id: number
         }
         Insert: {
-          categoryId?: number | null
-          created?: string
-          id?: number
-          isFinished?: boolean
-          modified: string
-          scheduled?: string | null
-          sortOrder?: number
-          taskDesc: string
-          taskName: string
-          userId?: string
+          task_id: number
+          tag_id: number
         }
         Update: {
-          categoryId?: number | null
-          created?: string
-          id?: number
-          isFinished?: boolean
-          modified?: string
-          scheduled?: string | null
-          sortOrder?: number
-          taskDesc?: string
-          taskName?: string
-          userId?: string
+          task_id?: number
+          tag_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "Tasks_categoryId_fkey"
-            columns: ["categoryId"]
+            foreignKeyName: "task_tags_task_id_fkey"
+            columns: ["task_id"]
             isOneToOne: false
-            referencedRelation: "category"
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "Tasks_userId_fkey"
-            columns: ["userId"]
+            foreignKeyName: "task_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          id: number
+          user_id: string
+          title: string
+          description: string
+          done: boolean
+          scheduled: string | null
+          sort_order: number
+          category_id: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          title: string
+          description?: string
+          done?: boolean
+          scheduled?: string | null
+          sort_order?: number
+          category_id?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          title?: string
+          description?: string
+          done?: boolean
+          scheduled?: string | null
+          sort_order?: number
+          category_id?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
