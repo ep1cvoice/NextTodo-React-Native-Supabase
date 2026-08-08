@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { ActivityIndicator, View, Text, StyleSheet, FlatList } from 'react-native';
 import { useNavigation } from 'expo-router';
 import { Search } from 'lucide-react-native';
 import { useTasks } from '@/context/TasksContext';
@@ -19,7 +19,7 @@ export default function ActiveTasks() {
   const navigation = useNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { activeTasks, categories, tags, addTask, toggleTask, deleteTask } = useTasks();
+  const { activeTasks, categories, tags, loading, addTask, toggleTask, deleteTask } = useTasks();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
@@ -109,35 +109,42 @@ export default function ActiveTasks() {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        style={styles.tasksList}
-        contentContainerStyle={[
-          styles.tasksContent,
-          filteredTasks.length === 0 && styles.tasksContentEmpty,
-        ]}
-        data={filteredTasks}
-        keyExtractor={(item) => String(item.id)}
-        ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconWrap}>
-                <Search size={68} color={colors.primary} />
+      {loading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading tasks…</Text>
+        </View>
+      ) : (
+        <FlatList
+          style={styles.tasksList}
+          contentContainerStyle={[
+            styles.tasksContent,
+            filteredTasks.length === 0 && styles.tasksContentEmpty,
+          ]}
+          data={filteredTasks}
+          keyExtractor={(item) => String(item.id)}
+          ItemSeparatorComponent={() => <View style={{ height: 6 }} />}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconWrap}>
+                  <Search size={68} color={colors.primary} />
+                </View>
+                <Text style={styles.emptyTitle}>{emptyCopy.title}</Text>
+                <Text style={styles.emptyText}>{emptyCopy.text}</Text>
               </View>
-              <Text style={styles.emptyTitle}>{emptyCopy.title}</Text>
-              <Text style={styles.emptyText}>{emptyCopy.text}</Text>
             </View>
-          </View>
-        }
-        renderItem={({ item, index }) => (
-          <ToDoItem
-            task={item}
-            index={index}
-            onToggle={toggleTask}
-            onDelete={deleteTask}
-          />
-        )}
-      />
+          }
+          renderItem={({ item, index }) => (
+            <ToDoItem
+              task={item}
+              index={index}
+              onToggle={toggleTask}
+              onDelete={deleteTask}
+            />
+          )}
+        />
+      )}
 
       <View style={styles.activeFooter}>
         <CreateTaskButton onPress={() => setShowCreateModal(true)} />
@@ -184,6 +191,18 @@ function createStyles(colors: AppColors) {
     },
     tasksContentEmpty: {
       flexGrow: 1,
+    },
+    loadingState: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 12,
+      paddingVertical: 40,
+    },
+    loadingText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.textMuted,
     },
     emptyState: {
       flex: 1,

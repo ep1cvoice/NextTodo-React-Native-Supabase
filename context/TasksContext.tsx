@@ -69,7 +69,7 @@ const TASK_SELECT = `
 const TasksContext = createContext<TasksContextValue | null>(null);
 
 export function TasksProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
@@ -108,6 +108,11 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+
     if (!user) {
       setTasks([]);
       setCategories([]);
@@ -128,7 +133,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, refresh]);
+  }, [user?.id, authLoading, refresh]);
 
   const requireUserId = () => {
     if (!user) throw new Error('Not signed in');
